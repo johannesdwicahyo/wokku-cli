@@ -118,7 +118,9 @@ register "auth:login", "Authenticate with Wokku" do
 
   if resp.is_a?(Net::HTTPSuccess) && data["token"]
     save_config({ "api_url" => url, "token" => data["token"], "email" => email })
+    instance = url.include?("wokku.cloud") ? "wokku.cloud (managed)" : "#{URI(url).host} (self-hosted)"
     puts "Logged in as #{email}"
+    puts "Connected to: #{instance}"
   else
     abort "Login failed: #{data['error'] || resp.code}"
   end
