@@ -5,7 +5,10 @@
 set -e
 
 INSTALL_DIR="/usr/local/bin"
-CLI_URL="https://raw.githubusercontent.com/johannesdwicahyo/wokku/main/cli/wokku"
+# Source of truth: wokku-cloud's cli/wokku, served at this URL. The
+# Homebrew tap fetches the same URL. The public OSS UI repo no longer
+# carries the CLI — it lives only in wokku-cloud (closed source).
+CLI_URL="https://wokku.cloud/cli/wokku"
 
 echo "Installing Wokku CLI..."
 
@@ -14,7 +17,7 @@ if [ ! -d "$INSTALL_DIR" ]; then
   sudo mkdir -p "$INSTALL_DIR"
 fi
 
-sudo curl -sL "$CLI_URL" -o "$INSTALL_DIR/wokku"
+sudo curl -fsSL "$CLI_URL" -o "$INSTALL_DIR/wokku"
 sudo chmod +x "$INSTALL_DIR/wokku"
 
 echo "Wokku CLI installed to $INSTALL_DIR/wokku"
