@@ -9,7 +9,7 @@ require "uri"
 require "io/console"
 require "fileutils"
 
-VERSION = "1.0.0"
+VERSION = "2.0.0"
 CONFIG_DIR = File.expand_path("~/.wokku")
 CONFIG_FILE = File.join(CONFIG_DIR, "config.json")
 
@@ -59,7 +59,17 @@ def api(method, path, body = nil)
   req["User-Agent"] = "WokkuCLI/#{VERSION}"
   req.body = body.to_json if body
 
-  resp = http.request(req)
+  begin
+    resp = http.request(req)
+  rescue Net::ReadTimeout, Net::OpenTimeout
+    abort "Request timed out — the server didn't respond in #{http.read_timeout}s. Retry, or check `wokku logs APP_ID` if the action might still be running."
+  rescue SocketError => e
+    abort "Cannot reach #{uri.host}: #{e.message.lines.first&.strip}. Check your internet connection or `wokku auth:whoami`."
+  rescue Errno::ECONNREFUSED
+    abort "Connection refused by #{uri.host}:#{uri.port}. The Wokku API may be down — try again in a moment."
+  rescue OpenSSL::SSL::SSLError => e
+    abort "TLS error talking to #{uri.host}: #{e.message.lines.first&.strip}."
+  end
   data = JSON.parse(resp.body) rescue resp.body
 
   unless resp.is_a?(Net::HTTPSuccess)
@@ -194,6 +204,19 @@ register "ps:start", "Start app (usage: wokku ps:start APP_ID)" do
   puts "Started."
 end
 
+register "ps:rebuild", "Rebuild + redeploy app (usage: wokku ps:rebuild APP_ID)" do
+  id = ARGV.shift || abort("Usage: wokku ps:rebuild APP_ID")
+  data = api(:post, "/apps/#{id}/deploy")
+  puts "Rebuild triggered. Deploy ##{data['deploy_id']} (release ##{data['release_id']})."
+  puts "Tail logs with: wokku logs #{id} --lines 200"
+end
+
+register "redeploy", "Redeploy app from latest source (usage: wokku redeploy APP_ID)" do
+  id = ARGV.shift || abort("Usage: wokku redeploy APP_ID")
+  data = api(:post, "/apps/#{id}/deploy")
+  puts "Redeploy triggered. Deploy ##{data['deploy_id']} (release ##{data['release_id']})."
+end
+
 register "ps:scale", "Scale processes (usage: wokku ps:scale APP_ID web=2 worker=1)" do
   id = ARGV.shift || abort("Usage: wokku ps:scale APP_ID web=N worker=N")
   scaling = {}
@@ -227,8 +250,34 @@ register "config:set", "Set config vars (usage: wokku config:set APP_ID KEY=VAL 
   end
   ARGV.clear
   abort "No KEY=VALUE pairs given." if vars.empty?
-  api(:put, "/apps/#{id}/config", vars)
+  # Server expects { vars: { K: V } }, not the bare hash. Sending the bare
+  # hash worked previously because Rails was permissive; the controller
+  # actually reads params[:vars].
+  api(:put, "/apps/#{id}/config", { vars: vars })
   puts "Config updated: #{vars.keys.join(', ')}"
+  puts "Restart the app to pick up changes: wokku ps:restart #{id}"
+end
+
+register "config:get", "Show one config var (usage: wokku config:get APP_ID KEY)" do
+  id = ARGV.shift || abort("Usage: wokku config:get APP_ID KEY")
+  key = ARGV.shift || abort("Missing KEY")
+  data = api(:get, "/apps/#{id}/config")
+  vars = data.is_a?(Hash) ? (data["config"] || data) : {}
+  if vars.key?(key)
+    puts vars[key]
+  else
+    abort "Key not set: #{key}"
+  end
+end
+
+register "config:unset", "Remove config vars (usage: wokku config:unset APP_ID KEY [KEY...])" do
+  id = ARGV.shift || abort("Usage: wokku config:unset APP_ID KEY [KEY...]")
+  keys = ARGV.dup
+  ARGV.clear
+  abort "No KEYs given." if keys.empty?
+  api(:delete, "/apps/#{id}/config", { keys: keys })
+  puts "Removed: #{keys.join(', ')}"
+  puts "Restart the app to pick up changes: wokku ps:restart #{id}"
 end
 
 # --- Domains ---
@@ -247,6 +296,151 @@ register "domains:add", "Add domain (usage: wokku domains:add APP_ID DOMAIN)" do
   domain = ARGV.shift || abort("Missing domain name")
   api(:post, "/apps/#{id}/domains", { hostname: domain })
   puts "Added domain: #{domain}"
+end
+
+# Look up a domain row by hostname so users can type the name they know
+# instead of an internal id. Returns the row or nil.
+def find_domain(app_id, hostname)
+  list = api(:get, "/apps/#{app_id}/domains")
+  return nil unless list.is_a?(Array)
+  list.find { |d| d["hostname"] == hostname }
+end
+
+register "domains:remove", "Remove a domain (usage: wokku domains:remove APP_ID DOMAIN)" do
+  id = ARGV.shift || abort("Usage: wokku domains:remove APP_ID DOMAIN")
+  domain = ARGV.shift || abort("Missing domain name")
+  row = find_domain(id, domain) || abort("No domain '#{domain}' on app #{id}")
+  api(:delete, "/apps/#{id}/domains/#{row['id']}")
+  puts "Removed domain: #{domain}"
+end
+
+register "domains:clear", "Remove every custom domain on an app (usage: wokku domains:clear APP_ID)" do
+  id = ARGV.shift || abort("Usage: wokku domains:clear APP_ID")
+  list = api(:get, "/apps/#{id}/domains")
+  abort "No domains on app #{id}" unless list.is_a?(Array) && list.any?
+  list.each do |d|
+    api(:delete, "/apps/#{id}/domains/#{d['id']}")
+    puts "Removed: #{d['hostname']}"
+  end
+end
+
+register "certs:enable", "Enable Let's Encrypt SSL on a domain (usage: wokku certs:enable APP_ID DOMAIN)" do
+  id = ARGV.shift || abort("Usage: wokku certs:enable APP_ID DOMAIN")
+  domain = ARGV.shift || abort("Missing domain name")
+  row = find_domain(id, domain) || abort("No domain '#{domain}' on app #{id} — add it first with wokku domains:add")
+  api(:post, "/apps/#{id}/domains/#{row['id']}/ssl")
+  puts "SSL enabled for #{domain}"
+end
+
+# --- Buildpacks ---
+register "buildpacks", "List buildpacks (usage: wokku buildpacks APP_ID)" do
+  id = ARGV.shift || abort("Usage: wokku buildpacks APP_ID")
+  data = api(:get, "/apps/#{id}/buildpacks")
+  list = data.is_a?(Hash) ? Array(data["buildpacks"]) : Array(data)
+  if list.empty?
+    puts "(no buildpacks configured — auto-detected from source)"
+  else
+    list.each_with_index { |url, i| puts "#{i + 1}. #{url}" }
+  end
+end
+
+register "buildpacks:add", "Append a buildpack (usage: wokku buildpacks:add APP_ID URL [--index N])" do
+  id = ARGV.shift || abort("Usage: wokku buildpacks:add APP_ID URL [--index N]")
+  url = ARGV.shift || abort("Missing buildpack URL")
+  index = nil
+  while arg = ARGV.shift
+    index = ARGV.shift if arg == "--index"
+  end
+  body = { url: url }
+  body[:index] = index if index
+  api(:post, "/apps/#{id}/buildpacks", body)
+  puts "Added buildpack: #{url}"
+end
+
+register "buildpacks:remove", "Remove a buildpack (usage: wokku buildpacks:remove APP_ID URL)" do
+  id = ARGV.shift || abort("Usage: wokku buildpacks:remove APP_ID URL")
+  url = ARGV.shift || abort("Missing buildpack URL")
+  api(:delete, "/apps/#{id}/buildpacks", { url: url })
+  puts "Removed buildpack: #{url}"
+end
+
+register "buildpacks:clear", "Remove every buildpack (usage: wokku buildpacks:clear APP_ID)" do
+  id = ARGV.shift || abort("Usage: wokku buildpacks:clear APP_ID")
+  api(:delete, "/apps/#{id}/buildpacks")
+  puts "All buildpacks removed."
+end
+
+register "buildpacks:set", "Replace the buildpack stack in order (usage: wokku buildpacks:set APP_ID URL [URL...])" do
+  id = ARGV.shift || abort("Usage: wokku buildpacks:set APP_ID URL [URL...]")
+  urls = ARGV.dup
+  ARGV.clear
+  abort "No buildpack URLs given." if urls.empty?
+  api(:put, "/apps/#{id}/buildpacks", { urls: urls })
+  puts "Buildpacks set: #{urls.join(', ')}"
+end
+
+# --- Health checks ---
+register "checks", "Show Dokku health check config (usage: wokku checks APP_ID)" do
+  id = ARGV.shift || abort("Usage: wokku checks APP_ID")
+  data = api(:get, "/apps/#{id}/checks")
+  puts_json data
+end
+
+register "checks:set", "Update health check settings (usage: wokku checks:set APP_ID [--enabled BOOL] [--wait N] [--timeout N] [--attempts N] [--path PATH])" do
+  id = ARGV.shift || abort("Usage: wokku checks:set APP_ID [flags]")
+  body = {}
+  while arg = ARGV.shift
+    case arg
+    when "--enabled"   then body[:enabled]  = ARGV.shift
+    when "--wait"      then body[:wait]     = ARGV.shift
+    when "--timeout"   then body[:timeout]  = ARGV.shift
+    when "--attempts"  then body[:attempts] = ARGV.shift
+    when "--path"      then body[:path]     = ARGV.shift
+    end
+  end
+  abort "No flags given. Try --enabled true, --path /healthz, --wait 5, etc." if body.empty?
+  api(:put, "/apps/#{id}/checks", body)
+  puts "Health check settings updated."
+end
+
+# --- Storage (host-bind volumes) ---
+register "storage", "List storage mounts (usage: wokku storage APP_ID)" do
+  id = ARGV.shift || abort("Usage: wokku storage APP_ID")
+  data = api(:get, "/apps/#{id}/storage")
+  list = data.is_a?(Hash) ? Array(data["mounts"]) : Array(data)
+  if list.empty?
+    puts "(no mounts configured)"
+  else
+    list.each { |m| puts m }
+  end
+end
+
+register "storage:mount", "Add a host-bind mount (usage: wokku storage:mount APP_ID HOST_PATH:CONTAINER_PATH)" do
+  id = ARGV.shift || abort("Usage: wokku storage:mount APP_ID HOST_PATH:CONTAINER_PATH")
+  spec = ARGV.shift || abort("Missing HOST_PATH:CONTAINER_PATH")
+  abort "Mount must be HOST_PATH:CONTAINER_PATH" unless spec.include?(":")
+  api(:post, "/apps/#{id}/storage", { mount: spec })
+  puts "Mounted: #{spec}"
+  puts "Restart the app to pick up the mount: wokku ps:restart #{id}"
+end
+
+register "storage:unmount", "Remove a host-bind mount (usage: wokku storage:unmount APP_ID HOST_PATH:CONTAINER_PATH)" do
+  id = ARGV.shift || abort("Usage: wokku storage:unmount APP_ID HOST_PATH:CONTAINER_PATH")
+  spec = ARGV.shift || abort("Missing HOST_PATH:CONTAINER_PATH")
+  api(:delete, "/apps/#{id}/storage", { mount: spec })
+  puts "Unmounted: #{spec}"
+end
+
+# --- One-off command in an ephemeral container ---
+register "run", "Run a one-off command (usage: wokku run APP_ID -- COMMAND [ARGS...])" do
+  id = ARGV.shift || abort("Usage: wokku run APP_ID -- COMMAND")
+  ARGV.shift if ARGV.first == "--"
+  cmd = ARGV.join(" ")
+  ARGV.clear
+  abort "Missing command. Example: wokku run APP_ID -- bin/rails console" if cmd.strip.empty?
+  data = api(:post, "/apps/#{id}/run", { command: cmd })
+  puts data["output"] if data.is_a?(Hash) && data["output"]
+  exit (data["exit_code"] || 0).to_i if data.is_a?(Hash) && data.key?("exit_code")
 end
 
 # --- Logs ---
