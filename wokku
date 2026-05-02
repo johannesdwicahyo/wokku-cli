@@ -10,8 +10,18 @@ require "io/console"
 require "fileutils"
 require_relative "lib/wokku/config"
 require_relative "lib/wokku/output"
+require_relative "lib/wokku/api_client"
 
 VERSION = "2.0.0"
+
+module Wokku
+  class << self
+    attr_writer :api_client
+    def api_client
+      @api_client ||= ApiClient.new(user_agent: "WokkuCLI/#{VERSION}")
+    end
+  end
+end
 CONFIG_DIR = Wokku::Config::DEFAULT_DIR
 CONFIG_FILE = File.join(CONFIG_DIR, "config.json")
 
@@ -22,47 +32,13 @@ def api_token = Wokku::Config.api_token
 
 # === API Client ===
 def api(method, path, body = nil)
-  token = api_token
-  abort "Not logged in. Run: wokku auth:login" unless token
-
-  uri = URI("#{api_url}#{path}")
-  http = Net::HTTP.new(uri.host, uri.port)
-  http.use_ssl = uri.scheme == "https"
-  http.open_timeout = 10
-  http.read_timeout = 30
-
-  req = case method
-  when :get then Net::HTTP::Get.new(uri)
-  when :post then Net::HTTP::Post.new(uri)
-  when :put then Net::HTTP::Put.new(uri)
-  when :patch then Net::HTTP::Patch.new(uri)
-  when :delete then Net::HTTP::Delete.new(uri)
-  end
-
-  req["Authorization"] = "Bearer #{token}"
-  req["Content-Type"] = "application/json"
-  req["User-Agent"] = "WokkuCLI/#{VERSION}"
-  req.body = body.to_json if body
-
-  begin
-    resp = http.request(req)
-  rescue Net::ReadTimeout, Net::OpenTimeout
-    abort "Request timed out — the server didn't respond in #{http.read_timeout}s. Retry, or check `wokku logs APP_ID` if the action might still be running."
-  rescue SocketError => e
-    abort "Cannot reach #{uri.host}: #{e.message.lines.first&.strip}. Check your internet connection or `wokku auth:whoami`."
-  rescue Errno::ECONNREFUSED
-    abort "Connection refused by #{uri.host}:#{uri.port}. The Wokku API may be down — try again in a moment."
-  rescue OpenSSL::SSL::SSLError => e
-    abort "TLS error talking to #{uri.host}: #{e.message.lines.first&.strip}."
-  end
-  data = JSON.parse(resp.body) rescue resp.body
-
-  unless resp.is_a?(Net::HTTPSuccess)
-    error = data.is_a?(Hash) ? (data["error"] || data["errors"]&.join(", ") || resp.code) : resp.code
-    abort "Error: #{error}"
-  end
-
-  data
+  Wokku.api_client.request(method, path, body)
+rescue Wokku::ApiClient::NotAuthenticated => e
+  abort e.message
+rescue Wokku::ApiClient::Timeout, Wokku::ApiClient::Unreachable => e
+  abort e.message
+rescue Wokku::ApiClient::Error => e
+  abort e.message
 end
 
 # === Formatting ===
