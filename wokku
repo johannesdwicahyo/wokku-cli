@@ -8,94 +8,42 @@ require "net/http"
 require "uri"
 require "io/console"
 require "fileutils"
+require_relative "lib/wokku/config"
+require_relative "lib/wokku/output"
+require_relative "lib/wokku/api_client"
 
 VERSION = "2.0.0"
-CONFIG_DIR = File.expand_path("~/.wokku")
+
+module Wokku
+  class << self
+    attr_writer :api_client
+    def api_client
+      @api_client ||= ApiClient.new(user_agent: "WokkuCLI/#{VERSION}")
+    end
+  end
+end
+CONFIG_DIR = Wokku::Config::DEFAULT_DIR
 CONFIG_FILE = File.join(CONFIG_DIR, "config.json")
 
-# === Config ===
-def load_config
-  return {} unless File.exist?(CONFIG_FILE)
-  JSON.parse(File.read(CONFIG_FILE))
-rescue
-  {}
-end
-
-def save_config(config)
-  FileUtils.mkdir_p(CONFIG_DIR)
-  File.write(CONFIG_FILE, JSON.pretty_generate(config))
-  File.chmod(0600, CONFIG_FILE)
-end
-
-def api_url
-  load_config["api_url"] || ENV["WOKKU_API_URL"] || "https://wokku.cloud/api/v1"
-end
-
-def api_token
-  load_config["token"] || ENV["WOKKU_API_TOKEN"]
-end
+def load_config = Wokku::Config.load
+def save_config(data) = Wokku::Config.save(data)
+def api_url = Wokku::Config.api_url
+def api_token = Wokku::Config.api_token
 
 # === API Client ===
 def api(method, path, body = nil)
-  token = api_token
-  abort "Not logged in. Run: wokku auth:login" unless token
-
-  uri = URI("#{api_url}#{path}")
-  http = Net::HTTP.new(uri.host, uri.port)
-  http.use_ssl = uri.scheme == "https"
-  http.open_timeout = 10
-  http.read_timeout = 30
-
-  req = case method
-  when :get then Net::HTTP::Get.new(uri)
-  when :post then Net::HTTP::Post.new(uri)
-  when :put then Net::HTTP::Put.new(uri)
-  when :patch then Net::HTTP::Patch.new(uri)
-  when :delete then Net::HTTP::Delete.new(uri)
-  end
-
-  req["Authorization"] = "Bearer #{token}"
-  req["Content-Type"] = "application/json"
-  req["User-Agent"] = "WokkuCLI/#{VERSION}"
-  req.body = body.to_json if body
-
-  begin
-    resp = http.request(req)
-  rescue Net::ReadTimeout, Net::OpenTimeout
-    abort "Request timed out — the server didn't respond in #{http.read_timeout}s. Retry, or check `wokku logs APP_ID` if the action might still be running."
-  rescue SocketError => e
-    abort "Cannot reach #{uri.host}: #{e.message.lines.first&.strip}. Check your internet connection or `wokku auth:whoami`."
-  rescue Errno::ECONNREFUSED
-    abort "Connection refused by #{uri.host}:#{uri.port}. The Wokku API may be down — try again in a moment."
-  rescue OpenSSL::SSL::SSLError => e
-    abort "TLS error talking to #{uri.host}: #{e.message.lines.first&.strip}."
-  end
-  data = JSON.parse(resp.body) rescue resp.body
-
-  unless resp.is_a?(Net::HTTPSuccess)
-    error = data.is_a?(Hash) ? (data["error"] || data["errors"]&.join(", ") || resp.code) : resp.code
-    abort "Error: #{error}"
-  end
-
-  data
+  Wokku.api_client.request(method, path, body)
+rescue Wokku::ApiClient::NotAuthenticated => e
+  abort e.message
+rescue Wokku::ApiClient::Timeout, Wokku::ApiClient::Unreachable => e
+  abort e.message
+rescue Wokku::ApiClient::Error => e
+  abort e.message
 end
 
 # === Formatting ===
-def table(rows, headers: nil)
-  return if rows.empty?
-  cols = (headers || rows.first.keys).map(&:to_s)
-  widths = cols.map { |c| c.length }
-  rows.each { |r| cols.each_with_index { |c, i| widths[i] = [ widths[i], r[c].to_s.length ].max } }
-
-  fmt = widths.map { |w| "%-#{w}s" }.join("  ")
-  puts fmt % cols.map(&:upcase)
-  puts widths.map { |w| "-" * w }.join("  ")
-  rows.each { |r| puts fmt % cols.map { |c| r[c] } }
-end
-
-def puts_json(data)
-  puts JSON.pretty_generate(data)
-end
+def table(rows, headers: nil) = Wokku::Output.table(rows, headers: headers)
+def puts_json(data) = Wokku::Output.puts_json(data)
 
 # === Commands ===
 COMMANDS = {}
@@ -113,7 +61,7 @@ register "auth:login", "Authenticate with Wokku" do
   print "Email: "
   email = $stdin.gets.strip
   print "Password: "
-  password = $stdin.noecho(&:gets).strip
+  password = ($stdin.respond_to?(:noecho) ? $stdin.noecho(&:gets) : $stdin.gets).strip
   puts
 
   uri = URI("#{url}/auth/login")
@@ -137,8 +85,9 @@ register "auth:login", "Authenticate with Wokku" do
 end
 
 register "auth:logout", "Log out" do
-  if File.exist?(CONFIG_FILE)
-    File.delete(CONFIG_FILE)
+  path = Wokku::Config.file
+  if File.exist?(path)
+    File.delete(path)
     puts "Logged out."
   else
     puts "Not logged in."
@@ -558,14 +507,23 @@ def show_help
 end
 
 # === Main ===
-command = ARGV.shift
+def dispatch(args)
+  ARGV.replace(args)
+  command = ARGV.shift
 
-if command.nil? || command == "help" || command == "--help" || command == "-h"
-  show_help
-elsif COMMANDS[command]
-  COMMANDS[command][:handler].call
-else
-  puts "Unknown command: #{command}"
-  puts "Run 'wokku help' for available commands."
-  exit 1
+  if command.nil? || command == "help" || command == "--help" || command == "-h"
+    show_help
+    return 0
+  elsif COMMANDS[command]
+    COMMANDS[command][:handler].call
+    return 0
+  else
+    puts "Unknown command: #{command}"
+    puts "Run 'wokku help' for available commands."
+    return 1
+  end
+end
+
+if $PROGRAM_NAME == __FILE__
+  exit dispatch(ARGV.dup)
 end
