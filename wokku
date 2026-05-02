@@ -9,6 +9,7 @@ require "uri"
 require "io/console"
 require "fileutils"
 require_relative "lib/wokku/config"
+require_relative "lib/wokku/output"
 
 VERSION = "2.0.0"
 CONFIG_DIR = Wokku::Config::DEFAULT_DIR
@@ -65,21 +66,8 @@ def api(method, path, body = nil)
 end
 
 # === Formatting ===
-def table(rows, headers: nil)
-  return if rows.empty?
-  cols = (headers || rows.first.keys).map(&:to_s)
-  widths = cols.map { |c| c.length }
-  rows.each { |r| cols.each_with_index { |c, i| widths[i] = [ widths[i], r[c].to_s.length ].max } }
-
-  fmt = widths.map { |w| "%-#{w}s" }.join("  ")
-  puts fmt % cols.map(&:upcase)
-  puts widths.map { |w| "-" * w }.join("  ")
-  rows.each { |r| puts fmt % cols.map { |c| r[c] } }
-end
-
-def puts_json(data)
-  puts JSON.pretty_generate(data)
-end
+def table(rows, headers: nil) = Wokku::Output.table(rows, headers: headers)
+def puts_json(data) = Wokku::Output.puts_json(data)
 
 # === Commands ===
 COMMANDS = {}
