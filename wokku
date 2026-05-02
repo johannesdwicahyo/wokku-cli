@@ -8,32 +8,16 @@ require "net/http"
 require "uri"
 require "io/console"
 require "fileutils"
+require_relative "lib/wokku/config"
 
 VERSION = "2.0.0"
-CONFIG_DIR = File.expand_path("~/.wokku")
+CONFIG_DIR = Wokku::Config::DEFAULT_DIR
 CONFIG_FILE = File.join(CONFIG_DIR, "config.json")
 
-# === Config ===
-def load_config
-  return {} unless File.exist?(CONFIG_FILE)
-  JSON.parse(File.read(CONFIG_FILE))
-rescue
-  {}
-end
-
-def save_config(config)
-  FileUtils.mkdir_p(CONFIG_DIR)
-  File.write(CONFIG_FILE, JSON.pretty_generate(config))
-  File.chmod(0600, CONFIG_FILE)
-end
-
-def api_url
-  load_config["api_url"] || ENV["WOKKU_API_URL"] || "https://wokku.cloud/api/v1"
-end
-
-def api_token
-  load_config["token"] || ENV["WOKKU_API_TOKEN"]
-end
+def load_config = Wokku::Config.load
+def save_config(data) = Wokku::Config.save(data)
+def api_url = Wokku::Config.api_url
+def api_token = Wokku::Config.api_token
 
 # === API Client ===
 def api(method, path, body = nil)
