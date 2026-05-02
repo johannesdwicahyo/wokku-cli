@@ -506,14 +506,23 @@ def show_help
 end
 
 # === Main ===
-command = ARGV.shift
+def dispatch(args)
+  ARGV.replace(args)
+  command = ARGV.shift
 
-if command.nil? || command == "help" || command == "--help" || command == "-h"
-  show_help
-elsif COMMANDS[command]
-  COMMANDS[command][:handler].call
-else
-  puts "Unknown command: #{command}"
-  puts "Run 'wokku help' for available commands."
-  exit 1
+  if command.nil? || command == "help" || command == "--help" || command == "-h"
+    show_help
+    return 0
+  elsif COMMANDS[command]
+    COMMANDS[command][:handler].call
+    return 0
+  else
+    puts "Unknown command: #{command}"
+    puts "Run 'wokku help' for available commands."
+    return 1
+  end
+end
+
+if $PROGRAM_NAME == __FILE__
+  exit dispatch(ARGV.dup)
 end
