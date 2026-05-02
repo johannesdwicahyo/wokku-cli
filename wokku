@@ -61,7 +61,7 @@ register "auth:login", "Authenticate with Wokku" do
   print "Email: "
   email = $stdin.gets.strip
   print "Password: "
-  password = $stdin.noecho(&:gets).strip
+  password = ($stdin.respond_to?(:noecho) ? $stdin.noecho(&:gets) : $stdin.gets).strip
   puts
 
   uri = URI("#{url}/auth/login")
@@ -85,8 +85,9 @@ register "auth:login", "Authenticate with Wokku" do
 end
 
 register "auth:logout", "Log out" do
-  if File.exist?(CONFIG_FILE)
-    File.delete(CONFIG_FILE)
+  path = Wokku::Config.file
+  if File.exist?(path)
+    File.delete(path)
     puts "Logged out."
   else
     puts "Not logged in."
