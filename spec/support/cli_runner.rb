@@ -10,13 +10,17 @@ module CliRunner
 
   module_function
 
-  def run(*args, api: nil, stdin: "")
+  def run(*args, api: nil, stdin: "", json: nil, quiet: nil)
     Wokku.api_client = api if api
 
     captured_out = StringIO.new
     captured_err = StringIO.new
     real_stdin = $stdin
     $stdin = StringIO.new(stdin)
+
+    expanded = args.flatten.map(&:to_s)
+    expanded << "--json"  if json
+    expanded << "--quiet" if quiet
 
     exit_code = 0
     original_stdout = $stdout
@@ -25,7 +29,7 @@ module CliRunner
     $stderr = captured_err
 
     begin
-      exit_code = dispatch(args.flatten.map(&:to_s))
+      exit_code = dispatch(expanded)
     rescue SystemExit => e
       exit_code = e.status || 1
     ensure
