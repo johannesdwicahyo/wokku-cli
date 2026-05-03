@@ -30,9 +30,14 @@ VERSION = "2.0.0"
 module Wokku
   class << self
     attr_writer :api_client
+    attr_accessor :json, :quiet
+
     def api_client
       @api_client ||= ApiClient.new(user_agent: "WokkuCLI/#{VERSION}")
     end
+
+    def json?  = !!@json
+    def quiet? = !!@quiet
   end
 end
 CONFIG_DIR = Wokku::Config::DEFAULT_DIR
@@ -84,6 +89,8 @@ end
 
 # === Main ===
 def dispatch(args)
+  Wokku.json  = !!args.delete("--json")
+  Wokku.quiet = !!(args.delete("--quiet") || args.delete("-q"))
   ARGV.replace(args)
   command = ARGV.shift
 
