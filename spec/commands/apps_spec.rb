@@ -37,13 +37,35 @@ RSpec.describe "apps commands" do
       expect(result.exit_code).to eq(0)
       expect(result.stdout).to include("Created app: gamma")
       call = fake.calls.find { |c| c.method == :post && c.path == "/apps" }
-      expect(call.body).to include(name: "gamma", server_id: 1, deploy_branch: "main")
+      expect(call.body).to include(name: "gamma", server_id: "1", deploy_branch: "main")
+    end
+  end
+
+  describe "apps:create server resolution" do
+    it "auto-picks the single server when --server omitted" do
+      fake.stub(:get, "/servers", returns: [{ "name" => "jkt-01", "host" => "h" }])
+      fake.stub(:post, "/apps", returns: { "id" => 9, "name" => "myapp" })
+      result = CliRunner.run("apps:create", "myapp", api: fake)
+      expect(result.exit_code).to eq(0)
+      post_call = fake.calls.find { |c| c.method == :post && c.path == "/apps" }
+      expect(post_call.body).to eq(name: "myapp", server_id: "jkt-01", deploy_branch: "main")
     end
 
-    it "aborts when --server is missing" do
-      result = CliRunner.run("apps:create", "gamma", api: fake)
+    it "aborts with helpful message when multiple servers and no --server" do
+      fake.stub(:get, "/servers", returns: [
+        { "name" => "jkt-01", "host" => "h" }, { "name" => "sgp-01", "host" => "h" }
+      ])
+      result = CliRunner.run("apps:create", "myapp", api: fake)
       expect(result.exit_code).not_to eq(0)
-      expect(result.stderr + result.stdout).to match(/--server/)
+      expect(result.stderr + result.stdout).to match(/Multiple servers available/)
+    end
+
+    it "explicit --server beats auto-pick" do
+      fake.stub(:get, "/servers", returns: [{ "name" => "jkt-01", "host" => "h" }])
+      fake.stub(:post, "/apps", returns: { "id" => 9, "name" => "myapp" })
+      CliRunner.run("apps:create", "myapp", "--server", "sgp-01", api: fake)
+      post_call = fake.calls.find { |c| c.method == :post && c.path == "/apps" }
+      expect(post_call.body).to include(server_id: "sgp-01")
     end
   end
 
