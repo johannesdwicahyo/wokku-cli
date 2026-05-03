@@ -25,8 +25,12 @@ def resolve_server(explicit: nil)
   return cfg_default if cfg_default
 
   servers = api(:get, "/servers")
-  return servers.first["name"] if servers.is_a?(Array) && servers.size == 1
+  unless servers.is_a?(Array)
+    abort "Unexpected response from /servers: #{servers.inspect[0..200]}"
+  end
+  abort "No servers available. Contact wokku.cloud support." if servers.empty?
+  return servers.first["name"] if servers.size == 1
 
-  names = servers.is_a?(Array) ? servers.map { |s| s["name"] }.join(", ") : "(unknown)"
+  names = servers.map { |s| s["name"] }.join(", ")
   abort "Multiple servers available (#{names}). Pass --server NAME or set a default: wokku servers:default NAME"
 end
