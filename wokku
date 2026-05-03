@@ -46,10 +46,12 @@ def table(rows, headers: nil) = Wokku::Output.table(rows, headers: headers)
 def puts_json(data) = Wokku::Output.puts_json(data)
 
 # === Commands ===
-COMMANDS = {}
+require_relative "lib/wokku/registry"
+
+COMMANDS = Wokku::Registry::COMMANDS
 
 def register(name, desc, &block)
-  COMMANDS[name] = { desc: desc, handler: block }
+  Wokku::Registry.register(name, desc, &block)
 end
 
 # --- Auth ---
