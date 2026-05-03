@@ -51,6 +51,13 @@ RSpec.describe "config commands" do
     path: "/apps/5/config",
     fake_response: { "FOO" => "bar" }
 
+  include_examples "respects --quiet",
+    command: "config:set",
+    args: ["5", "FOO=bar"],
+    path: "/apps/5/config",
+    api_method: :put,
+    fake_response: {}
+
   describe "config:unset" do
     it "DELETEs /apps/:id/config with keys list" do
       fake.stub(:delete, "/apps/5/config", returns: {})
