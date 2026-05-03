@@ -57,23 +57,6 @@ end
 
 Dir[File.join(__dir__, "lib/wokku/commands/*.rb")].sort.each { |f| require_relative f }
 
-register "logs", "View logs (usage: wokku logs APP [--lines N])" do
-  id = ARGV.shift || abort("Usage: wokku logs APP")
-  lines = 100
-  while arg = ARGV.shift
-    lines = ARGV.shift.to_i if arg == "--lines"
-  end
-  data = api(:get, "/apps/#{id}/logs?lines=#{lines}")
-  if data.is_a?(Array)
-    data.each { |l| puts l }
-  elsif data.is_a?(Hash) && data["logs"]
-    puts data["logs"]
-  else
-    puts_json data
-  end
-end
-
-# --- Releases ---
 register "releases", "List releases (usage: wokku releases APP)" do
   id = ARGV.shift || abort("Usage: wokku releases APP")
   data = api(:get, "/apps/#{id}/releases")
