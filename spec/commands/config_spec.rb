@@ -3,6 +3,8 @@
 RSpec.describe "config commands" do
   let(:fake) { FakeApiClient.new }
 
+  include_examples "passes APP through verbatim", command: "config", path_pattern: "/apps/APP/config", api_method: :get
+
   describe "config" do
     it "lists vars as KEY=VALUE" do
       fake.stub(:get, "/apps/5/config", returns: { "FOO" => "bar", "BAZ" => "qux" })
