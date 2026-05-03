@@ -47,6 +47,12 @@ RSpec.describe "wokku do" do
     expect(result.exit_code).not_to eq(0)
   end
 
+  it "aborts when --server has no value" do
+    result = CliRunner.run("do", "--server", "--", "version", api: fake)
+    expect(result.exit_code).not_to eq(0)
+    expect(result.stderr + result.stdout).to match(/--server requires/)
+  end
+
   it "accepts UUID just as well as name" do
     uuid = "00000000-0000-0000-0000-000000000001"
     fake.stub(:post, "/apps/#{uuid}/dokku", returns: { "stdout" => "ok", "stderr" => "", "exit_code" => 0 })
