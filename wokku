@@ -77,12 +77,16 @@ Dir[File.join(__dir__, "lib/wokku/commands/*.rb")].sort.each { |f| require_relat
 
 def show_help
   puts "Wokku CLI v#{VERSION}"
-  puts "Usage: wokku COMMAND [args]"
+  puts "Usage: wokku COMMAND [args] [--json] [--quiet]"
   puts
   puts "Commands:"
   COMMANDS.sort_by { |k, _| k }.each do |name, cmd|
     puts "  %-20s %s" % [ name, cmd[:desc] ]
   end
+  puts
+  puts "Global flags:"
+  puts "  --json    Machine-readable JSON output (read commands only)"
+  puts "  --quiet   Suppress success messages and hints (alias: -q)"
   puts
   puts "Run 'wokku auth:login' to get started."
 end
