@@ -14,6 +14,12 @@ RSpec.describe "releases and rollback" do
     end
   end
 
+  include_examples "respects --json",
+    command: "releases",
+    args: ["5"],
+    path: "/apps/5/releases",
+    fake_response: [{ "version" => 3, "description" => "deploy", "created_at" => "2026-05-01T00:00:00Z" }]
+
   describe "rollback" do
     it "POSTs /apps/:id/releases/:rid/rollback" do
       fake.stub(:post, "/apps/5/releases/3/rollback", returns: {})

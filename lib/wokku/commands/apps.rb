@@ -3,12 +3,15 @@
 # --- Apps ---
 register "apps", "List all apps" do
   apps = api(:get, "/apps")
-  table(apps.map { |a| { "name" => a["name"], "status" => a["status"], "server" => a["server_id"] } })
+  Wokku::Output.render(apps) do |list|
+    table(list.map { |a| { "name" => a["name"], "status" => a["status"], "server" => a["server_id"] } })
+  end
 end
 
 register "apps:info", "Show app details (usage: wokku apps:info APP)" do
   id = ARGV.shift || abort("Usage: wokku apps:info APP")
-  puts_json api(:get, "/apps/#{id}")
+  data = api(:get, "/apps/#{id}")
+  Wokku::Output.render(data) { |d| puts_json d }
 end
 
 register "apps:create", "Create app (usage: wokku apps:create NAME --server ID)" do
@@ -23,7 +26,7 @@ register "apps:create", "Create app (usage: wokku apps:create NAME --server ID)"
   end
   abort "Missing --server ID" unless server_id
   data = api(:post, "/apps", { name: name, server_id: server_id.to_i, deploy_branch: branch })
-  puts "Created app: #{data['name']} (id: #{data['id']})"
+  Wokku::Output.status "Created app: #{data['name']} (id: #{data['id']})"
 end
 
 register "apps:destroy", "Delete app (usage: wokku apps:destroy APP)" do
@@ -32,5 +35,5 @@ register "apps:destroy", "Delete app (usage: wokku apps:destroy APP)" do
   confirm = $stdin.gets.strip
   abort "Cancelled." unless confirm.downcase == "y"
   api(:delete, "/apps/#{id}")
-  puts "App deleted."
+  Wokku::Output.status "App deleted."
 end

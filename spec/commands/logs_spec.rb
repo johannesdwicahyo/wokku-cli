@@ -18,4 +18,10 @@ RSpec.describe "logs command" do
     expect(result.exit_code).to eq(0)
     expect(fake.calls.first.path).to eq("/apps/5/logs?lines=500")
   end
+
+  include_examples "respects --json",
+    command: "logs",
+    args: ["5"],
+    path: "/apps/5/logs?lines=100",
+    fake_response: ["line1", "line2"]
 end

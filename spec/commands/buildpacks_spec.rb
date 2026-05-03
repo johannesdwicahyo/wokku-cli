@@ -55,6 +55,12 @@ RSpec.describe "buildpacks commands" do
     end
   end
 
+  include_examples "respects --json",
+    command: "buildpacks",
+    args: ["5"],
+    path: "/apps/5/buildpacks",
+    fake_response: { "buildpacks" => ["a", "b"] }
+
   describe "buildpacks:set" do
     it "PUTs the urls array in order" do
       fake.stub(:put, "/apps/5/buildpacks", returns: {})

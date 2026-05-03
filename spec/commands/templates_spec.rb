@@ -12,6 +12,11 @@ RSpec.describe "templates and deploy" do
     end
   end
 
+  include_examples "respects --json",
+    command: "templates",
+    path: "/templates",
+    fake_response: [{ "slug" => "wp", "description" => "WordPress" }]
+
   describe "deploy" do
     it "POSTs /templates/deploy with slug + server" do
       fake.stub(:post, "/templates/deploy", returns: { "id" => 1 })

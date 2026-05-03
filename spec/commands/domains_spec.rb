@@ -40,6 +40,12 @@ RSpec.describe "domains commands" do
     end
   end
 
+  include_examples "respects --json",
+    command: "domains",
+    args: ["5"],
+    path: "/apps/5/domains",
+    fake_response: [{ "id" => 1, "hostname" => "a.com" }]
+
   describe "domains:clear" do
     it "DELETEs each domain on the app" do
       fake.stub(:get, "/apps/5/domains", returns: [{ "id" => 1, "hostname" => "a.com" }, { "id" => 2, "hostname" => "b.com" }])

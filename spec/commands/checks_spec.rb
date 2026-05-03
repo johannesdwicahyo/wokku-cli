@@ -14,6 +14,12 @@ RSpec.describe "checks commands" do
     end
   end
 
+  include_examples "respects --json",
+    command: "checks",
+    args: ["5"],
+    path: "/apps/5/checks",
+    fake_response: { "enabled" => true, "path" => "/healthz" }
+
   describe "checks:set" do
     it "PUTs only the flags provided" do
       fake.stub(:put, "/apps/5/checks", returns: {})

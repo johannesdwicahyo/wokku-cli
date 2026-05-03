@@ -23,5 +23,7 @@ RSpec.configure do |c|
   c.before(:each) do
     WebMock.disable_net_connect!
     Wokku.api_client = nil  # reset cached default client between examples
+    Wokku.json = nil
+    Wokku.quiet = nil
   end
 end

@@ -1,5 +1,5 @@
 # frozen_string_literal: true
 
 register "version", "Show CLI version" do
-  puts "wokku/#{VERSION}"
+  Wokku::Output.render({ "version" => VERSION }) { |d| puts "wokku/#{d['version']}" }
 end

@@ -52,4 +52,11 @@ RSpec.describe "process commands" do
       expect(result.stderr + result.stdout).to match(/scaling pairs/i)
     end
   end
+
+  include_examples "respects --quiet",
+    command: "ps:restart",
+    args: ["5"],
+    path: "/apps/5/restart",
+    api_method: :post,
+    fake_response: {}
 end

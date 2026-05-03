@@ -30,9 +30,14 @@ VERSION = "2.0.0"
 module Wokku
   class << self
     attr_writer :api_client
+    attr_accessor :json, :quiet
+
     def api_client
       @api_client ||= ApiClient.new(user_agent: "WokkuCLI/#{VERSION}")
     end
+
+    def json?  = !!@json
+    def quiet? = !!@quiet
   end
 end
 CONFIG_DIR = Wokku::Config::DEFAULT_DIR
@@ -72,19 +77,30 @@ Dir[File.join(__dir__, "lib/wokku/commands/*.rb")].sort.each { |f| require_relat
 
 def show_help
   puts "Wokku CLI v#{VERSION}"
-  puts "Usage: wokku COMMAND [args]"
+  puts "Usage: wokku COMMAND [args] [--json] [--quiet]"
   puts
   puts "Commands:"
   COMMANDS.sort_by { |k, _| k }.each do |name, cmd|
     puts "  %-20s %s" % [ name, cmd[:desc] ]
   end
   puts
+  puts "Global flags:"
+  puts "  --json    Machine-readable JSON output (read commands only)"
+  puts "  --quiet   Suppress success messages and hints (alias: -q)"
+  puts
   puts "Run 'wokku auth:login' to get started."
 end
 
 # === Main ===
 def dispatch(args)
-  ARGV.replace(args)
+  # Only parse global flags BEFORE the `--` separator so commands like
+  # `wokku do APP -- --json ...` can pass the literal flag through.
+  sep = args.index("--")
+  head = sep ? args[0...sep] : args.dup
+  tail = sep ? args[sep..] : []
+  Wokku.json  = !!head.delete("--json")
+  Wokku.quiet = !!(head.delete("--quiet") || head.delete("-q"))
+  ARGV.replace(head + tail)
   command = ARGV.shift
 
   if command.nil? || command == "help" || command == "--help" || command == "-h"

@@ -4,10 +4,12 @@
 register "domains", "List domains (usage: wokku domains APP)" do
   id = ARGV.shift || abort("Usage: wokku domains APP")
   data = api(:get, "/apps/#{id}/domains")
-  if data.is_a?(Array)
-    data.each { |d| puts d["hostname"] || d }
-  else
-    puts_json data
+  Wokku::Output.render(data) do |d|
+    if d.is_a?(Array)
+      d.each { |row| puts row["hostname"] || row }
+    else
+      puts_json d
+    end
   end
 end
 
@@ -15,7 +17,7 @@ register "domains:add", "Add domain (usage: wokku domains:add APP DOMAIN)" do
   id = ARGV.shift || abort("Usage: wokku domains:add APP DOMAIN")
   domain = ARGV.shift || abort("Missing domain name")
   api(:post, "/apps/#{id}/domains", { hostname: domain })
-  puts "Added domain: #{domain}"
+  Wokku::Output.status "Added domain: #{domain}"
 end
 
 register "domains:remove", "Remove a domain (usage: wokku domains:remove APP DOMAIN)" do
@@ -23,7 +25,7 @@ register "domains:remove", "Remove a domain (usage: wokku domains:remove APP DOM
   domain = ARGV.shift || abort("Missing domain name")
   row = find_domain(id, domain) || abort("No domain '#{domain}' on app #{id}")
   api(:delete, "/apps/#{id}/domains/#{row['id']}")
-  puts "Removed domain: #{domain}"
+  Wokku::Output.status "Removed domain: #{domain}"
 end
 
 register "domains:clear", "Remove every custom domain on an app (usage: wokku domains:clear APP)" do
@@ -32,6 +34,6 @@ register "domains:clear", "Remove every custom domain on an app (usage: wokku do
   abort "No domains on app #{id}" unless list.is_a?(Array) && list.any?
   list.each do |d|
     api(:delete, "/apps/#{id}/domains/#{d['id']}")
-    puts "Removed: #{d['hostname']}"
+    Wokku::Output.status "Removed: #{d['hostname']}"
   end
 end

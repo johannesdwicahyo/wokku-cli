@@ -3,10 +3,12 @@
 # --- Templates ---
 register "templates", "List available templates" do
   data = api(:get, "/templates")
-  if data.is_a?(Array)
-    data.each { |t| puts "#{t['slug'] || t['name']}  #{t['description'].to_s[0..60]}" }
-  else
-    puts_json data
+  Wokku::Output.render(data) do |d|
+    if d.is_a?(Array)
+      d.each { |t| puts "#{t['slug'] || t['name']}  #{t['description'].to_s[0..60]}" }
+    else
+      puts_json d
+    end
   end
 end
 
@@ -24,6 +26,6 @@ register "deploy", "Deploy template (usage: wokku deploy TEMPLATE --server ID [-
   body = { slug: slug, server_id: server_id.to_i }
   body[:name] = name if name
   data = api(:post, "/templates/deploy", body)
-  puts "Deploying #{slug}..."
-  puts_json data
+  Wokku::Output.status "Deploying #{slug}..."
+  Wokku::Output.render(data) { |d| puts_json d }
 end

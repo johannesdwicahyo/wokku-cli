@@ -51,6 +51,18 @@ RSpec.describe "apps commands" do
     include_examples "passes APP through verbatim", command: "apps:info", path_pattern: "/apps/APP", api_method: :get
   end
 
+  include_examples "respects --json",
+    command: "apps",
+    path: "/apps",
+    fake_response: [{ "name" => "alpha", "status" => "running", "server_id" => 1 }]
+
+  include_examples "respects --quiet",
+    command: "apps:create",
+    args: ["myapp", "--server", "1"],
+    path: "/apps",
+    api_method: :post,
+    fake_response: { "id" => 1, "name" => "myapp" }
+
   describe "apps:destroy" do
     it "DELETEs /apps/:id when confirmed with y" do
       fake.stub(:delete, "/apps/7", returns: { "ok" => true })
