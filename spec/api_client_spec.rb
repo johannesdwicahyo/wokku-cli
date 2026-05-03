@@ -26,10 +26,10 @@ RSpec.describe Wokku::ApiClient do
   end
 
   it "raises Error with the API's error message on 4xx" do
-    stub_request(:get, "https://example.test/api/v1/apps/999")
-      .to_return(status: 404, body: '{"error":"App not found"}')
+    stub_request(:get, "https://example.test/api/v1/templates/999")
+      .to_return(status: 404, body: '{"error":"Template not found"}')
 
-    expect { client.get("/apps/999") }.to raise_error(Wokku::ApiClient::Error, /App not found/)
+    expect { client.get("/templates/999") }.to raise_error(Wokku::ApiClient::Error, /Template not found/)
   end
 
   it "raises Timeout on read timeout" do
@@ -40,5 +40,11 @@ RSpec.describe Wokku::ApiClient do
   it "raises Unreachable on connection refused" do
     stub_request(:get, "https://example.test/api/v1/apps").to_raise(Errno::ECONNREFUSED)
     expect { client.get("/apps") }.to raise_error(Wokku::ApiClient::Unreachable)
+  end
+
+  it "returns a friendly message on 404 from /apps/:id paths" do
+    stub_request(:get, "https://example.test/api/v1/apps/missing")
+      .to_return(status: 404, body: '{"error":"Couldn\'t find AppRecord"}')
+    expect { client.get("/apps/missing") }.to raise_error(Wokku::ApiClient::Error, /No app named 'missing'/)
   end
 end
