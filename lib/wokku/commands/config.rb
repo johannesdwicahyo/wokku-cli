@@ -36,7 +36,7 @@ register "config:get", "Show one config var (usage: wokku config:get APP KEY)" d
   data = api(:get, "/apps/#{id}/config")
   vars = data.is_a?(Hash) ? (data["config"] || data) : {}
   abort "Key not set: #{key}" unless vars.key?(key)
-  Wokku::Output.render(vars[key]) { |v| puts v }
+  Wokku::Output.render({ "key" => key, "value" => vars[key] }) { |_| puts vars[key] }
 end
 
 register "config:unset", "Remove config vars (usage: wokku config:unset APP KEY [KEY...])" do

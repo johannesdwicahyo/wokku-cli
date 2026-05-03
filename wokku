@@ -93,9 +93,14 @@ end
 
 # === Main ===
 def dispatch(args)
-  Wokku.json  = !!args.delete("--json")
-  Wokku.quiet = !!(args.delete("--quiet") || args.delete("-q"))
-  ARGV.replace(args)
+  # Only parse global flags BEFORE the `--` separator so commands like
+  # `wokku do APP -- --json ...` can pass the literal flag through.
+  sep = args.index("--")
+  head = sep ? args[0...sep] : args.dup
+  tail = sep ? args[sep..] : []
+  Wokku.json  = !!head.delete("--json")
+  Wokku.quiet = !!(head.delete("--quiet") || head.delete("-q"))
+  ARGV.replace(head + tail)
   command = ARGV.shift
 
   if command.nil? || command == "help" || command == "--help" || command == "-h"

@@ -3,6 +3,13 @@
 RSpec.describe "wokku do" do
   let(:fake) { FakeApiClient.new }
 
+  it "passes literal --json after -- through to dokku args (no global flag eaten)" do
+    fake.stub(:post, "/apps/myapp/dokku", returns: { "stdout" => "{}", "stderr" => "", "exit_code" => 0 })
+    CliRunner.run("do", "myapp", "--", "config:show", "--json", api: fake)
+    expect(fake.calls.first.body).to eq(args: ["config:show", "--json"], force: false)
+    expect(Wokku.json?).to be(false)
+  end
+
   it "POSTs /apps/:id/dokku with args array (app-scoped)" do
     fake.stub(:post, "/apps/myapp/dokku", returns: { "stdout" => "web.1: running", "stderr" => "", "exit_code" => 0 })
     result = CliRunner.run("do", "myapp", "--", "ps:list", api: fake)
