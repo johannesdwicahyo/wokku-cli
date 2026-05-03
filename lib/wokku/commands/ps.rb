@@ -4,32 +4,32 @@
 register "ps:restart", "Restart app (usage: wokku ps:restart APP)" do
   id = ARGV.shift || abort("Usage: wokku ps:restart APP")
   api(:post, "/apps/#{id}/restart")
-  puts "Restarting..."
+  Wokku::Output.status "Restarting..."
 end
 
 register "ps:stop", "Stop app (usage: wokku ps:stop APP)" do
   id = ARGV.shift || abort("Usage: wokku ps:stop APP")
   api(:post, "/apps/#{id}/stop")
-  puts "Stopped."
+  Wokku::Output.status "Stopped."
 end
 
 register "ps:start", "Start app (usage: wokku ps:start APP)" do
   id = ARGV.shift || abort("Usage: wokku ps:start APP")
   api(:post, "/apps/#{id}/start")
-  puts "Started."
+  Wokku::Output.status "Started."
 end
 
 register "ps:rebuild", "Rebuild + redeploy app (usage: wokku ps:rebuild APP)" do
   id = ARGV.shift || abort("Usage: wokku ps:rebuild APP")
   data = api(:post, "/apps/#{id}/deploy")
-  puts "Rebuild triggered. Deploy ##{data['deploy_id']} (release ##{data['release_id']})."
-  puts "Tail logs with: wokku logs #{id} --lines 200"
+  Wokku::Output.status "Rebuild triggered. Deploy ##{data['deploy_id']} (release ##{data['release_id']})."
+  Wokku::Output.status "Tail logs with: wokku logs #{id} --lines 200"
 end
 
 register "redeploy", "Redeploy app from latest source (usage: wokku redeploy APP)" do
   id = ARGV.shift || abort("Usage: wokku redeploy APP")
   data = api(:post, "/apps/#{id}/deploy")
-  puts "Redeploy triggered. Deploy ##{data['deploy_id']} (release ##{data['release_id']})."
+  Wokku::Output.status "Redeploy triggered. Deploy ##{data['deploy_id']} (release ##{data['release_id']})."
 end
 
 register "ps:scale", "Scale processes (usage: wokku ps:scale APP web=2 worker=1)" do
@@ -42,5 +42,5 @@ register "ps:scale", "Scale processes (usage: wokku ps:scale APP web=2 worker=1)
   ARGV.clear
   abort "No scaling pairs given. Example: web=2 worker=1" if scaling.empty?
   api(:patch, "/apps/#{id}/ps", { scaling: scaling })
-  puts "Scaled: #{scaling.map { |t, c| "#{t}=#{c}" }.join(' ')}"
+  Wokku::Output.status "Scaled: #{scaling.map { |t, c| "#{t}=#{c}" }.join(' ')}"
 end

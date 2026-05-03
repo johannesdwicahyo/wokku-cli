@@ -23,5 +23,5 @@ register "addons:add", "Add add-on (usage: wokku addons:add APP postgres)" do
   body = { service_type: service_type }
   body[:name] = name if name
   data = api(:post, "/apps/#{id}/addons", body)
-  puts "Added #{service_type}: #{data['name'] || data['id']}"
+  Wokku::Output.status "Added #{service_type}: #{data['name'] || data['id']}"
 end

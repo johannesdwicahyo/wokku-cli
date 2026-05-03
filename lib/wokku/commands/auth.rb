@@ -25,8 +25,8 @@ register "auth:login", "Authenticate with Wokku" do
   if resp.is_a?(Net::HTTPSuccess) && data["token"]
     save_config({ "api_url" => url, "token" => data["token"], "email" => email })
     instance = url.include?("wokku.cloud") ? "wokku.cloud (managed)" : "#{URI(url).host} (self-hosted)"
-    puts "Logged in as #{email}"
-    puts "Connected to: #{instance}"
+    Wokku::Output.status "Logged in as #{email}"
+    Wokku::Output.status "Connected to: #{instance}"
   else
     abort "Login failed: #{data['error'] || resp.code}"
   end
@@ -36,9 +36,9 @@ register "auth:logout", "Log out" do
   path = Wokku::Config.file
   if File.exist?(path)
     File.delete(path)
-    puts "Logged out."
+    Wokku::Output.status "Logged out."
   else
-    puts "Not logged in."
+    Wokku::Output.status "Not logged in."
   end
 end
 

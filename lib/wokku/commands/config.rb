@@ -26,8 +26,8 @@ register "config:set", "Set config vars (usage: wokku config:set APP KEY=VAL ...
   # hash worked previously because Rails was permissive; the controller
   # actually reads params[:vars].
   api(:put, "/apps/#{id}/config", { vars: vars })
-  puts "Config updated: #{vars.keys.join(', ')}"
-  puts "Restart the app to pick up changes: wokku ps:restart #{id}"
+  Wokku::Output.status "Config updated: #{vars.keys.join(', ')}"
+  Wokku::Output.status "Restart the app to pick up changes: wokku ps:restart #{id}"
 end
 
 register "config:get", "Show one config var (usage: wokku config:get APP KEY)" do
@@ -45,6 +45,6 @@ register "config:unset", "Remove config vars (usage: wokku config:unset APP KEY 
   ARGV.clear
   abort "No KEYs given." if keys.empty?
   api(:delete, "/apps/#{id}/config", { keys: keys })
-  puts "Removed: #{keys.join(', ')}"
-  puts "Restart the app to pick up changes: wokku ps:restart #{id}"
+  Wokku::Output.status "Removed: #{keys.join(', ')}"
+  Wokku::Output.status "Restart the app to pick up changes: wokku ps:restart #{id}"
 end

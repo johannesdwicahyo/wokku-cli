@@ -17,5 +17,5 @@ register "rollback", "Rollback to release (usage: wokku rollback APP RELEASE_ID)
   id = ARGV.shift || abort("Usage: wokku rollback APP RELEASE_ID")
   release_id = ARGV.shift || abort("Missing release ID")
   api(:post, "/apps/#{id}/releases/#{release_id}/rollback")
-  puts "Rolling back..."
+  Wokku::Output.status "Rolling back..."
 end

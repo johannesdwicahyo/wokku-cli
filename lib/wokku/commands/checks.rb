@@ -21,5 +21,5 @@ register "checks:set", "Update health check settings (usage: wokku checks:set AP
   end
   abort "No flags given. Try --enabled true, --path /healthz, --wait 5, etc." if body.empty?
   api(:put, "/apps/#{id}/checks", body)
-  puts "Health check settings updated."
+  Wokku::Output.status "Health check settings updated."
 end
