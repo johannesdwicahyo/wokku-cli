@@ -3,12 +3,15 @@
 # --- Apps ---
 register "apps", "List all apps" do
   apps = api(:get, "/apps")
-  table(apps.map { |a| { "name" => a["name"], "status" => a["status"], "server" => a["server_id"] } })
+  Wokku::Output.render(apps) do |list|
+    table(list.map { |a| { "name" => a["name"], "status" => a["status"], "server" => a["server_id"] } })
+  end
 end
 
 register "apps:info", "Show app details (usage: wokku apps:info APP)" do
   id = ARGV.shift || abort("Usage: wokku apps:info APP")
-  puts_json api(:get, "/apps/#{id}")
+  data = api(:get, "/apps/#{id}")
+  Wokku::Output.render(data) { |d| puts_json d }
 end
 
 register "apps:create", "Create app (usage: wokku apps:create NAME --server ID)" do

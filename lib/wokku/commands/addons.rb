@@ -4,10 +4,12 @@
 register "addons", "List add-ons (usage: wokku addons APP)" do
   id = ARGV.shift || abort("Usage: wokku addons APP")
   data = api(:get, "/apps/#{id}/addons")
-  if data.is_a?(Array)
-    table(data.map { |a| { "name" => a["name"], "type" => a["service_type"], "status" => a["status"] } })
-  else
-    puts_json data
+  Wokku::Output.render(data) do |d|
+    if d.is_a?(Array)
+      table(d.map { |a| { "name" => a["name"], "type" => a["service_type"], "status" => a["status"] } })
+    else
+      puts_json d
+    end
   end
 end
 

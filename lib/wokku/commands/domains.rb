@@ -4,10 +4,12 @@
 register "domains", "List domains (usage: wokku domains APP)" do
   id = ARGV.shift || abort("Usage: wokku domains APP")
   data = api(:get, "/apps/#{id}/domains")
-  if data.is_a?(Array)
-    data.each { |d| puts d["hostname"] || d }
-  else
-    puts_json data
+  Wokku::Output.render(data) do |d|
+    if d.is_a?(Array)
+      d.each { |row| puts row["hostname"] || row }
+    else
+      puts_json d
+    end
   end
 end
 

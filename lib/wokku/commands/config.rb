@@ -4,10 +4,12 @@
 register "config", "Show config vars (usage: wokku config APP)" do
   id = ARGV.shift || abort("Usage: wokku config APP")
   data = api(:get, "/apps/#{id}/config")
-  if data.is_a?(Hash)
-    data.each { |k, v| puts "#{k}=#{v}" }
-  else
-    puts_json data
+  Wokku::Output.render(data) do |d|
+    if d.is_a?(Hash)
+      d.each { |k, v| puts "#{k}=#{v}" }
+    else
+      puts_json d
+    end
   end
 end
 
@@ -33,11 +35,8 @@ register "config:get", "Show one config var (usage: wokku config:get APP KEY)" d
   key = ARGV.shift || abort("Missing KEY")
   data = api(:get, "/apps/#{id}/config")
   vars = data.is_a?(Hash) ? (data["config"] || data) : {}
-  if vars.key?(key)
-    puts vars[key]
-  else
-    abort "Key not set: #{key}"
-  end
+  abort "Key not set: #{key}" unless vars.key?(key)
+  Wokku::Output.render(vars[key]) { |v| puts v }
 end
 
 register "config:unset", "Remove config vars (usage: wokku config:unset APP KEY [KEY...])" do

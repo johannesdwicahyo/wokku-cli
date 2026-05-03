@@ -3,10 +3,12 @@
 # --- Templates ---
 register "templates", "List available templates" do
   data = api(:get, "/templates")
-  if data.is_a?(Array)
-    data.each { |t| puts "#{t['slug'] || t['name']}  #{t['description'].to_s[0..60]}" }
-  else
-    puts_json data
+  Wokku::Output.render(data) do |d|
+    if d.is_a?(Array)
+      d.each { |t| puts "#{t['slug'] || t['name']}  #{t['description'].to_s[0..60]}" }
+    else
+      puts_json d
+    end
   end
 end
 

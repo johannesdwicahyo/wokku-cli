@@ -4,11 +4,13 @@
 register "storage", "List storage mounts (usage: wokku storage APP)" do
   id = ARGV.shift || abort("Usage: wokku storage APP")
   data = api(:get, "/apps/#{id}/storage")
-  list = data.is_a?(Hash) ? Array(data["mounts"]) : Array(data)
-  if list.empty?
-    puts "(no mounts configured)"
-  else
-    list.each { |m| puts m }
+  Wokku::Output.render(data) do |d|
+    list = d.is_a?(Hash) ? Array(d["mounts"]) : Array(d)
+    if list.empty?
+      puts "(no mounts configured)"
+    else
+      list.each { |m| puts m }
+    end
   end
 end
 

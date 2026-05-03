@@ -4,7 +4,7 @@
 register "checks", "Show Dokku health check config (usage: wokku checks APP)" do
   id = ARGV.shift || abort("Usage: wokku checks APP")
   data = api(:get, "/apps/#{id}/checks")
-  puts_json data
+  Wokku::Output.render(data) { |d| puts_json d }
 end
 
 register "checks:set", "Update health check settings (usage: wokku checks:set APP [--enabled BOOL] [--wait N] [--timeout N] [--attempts N] [--path PATH])" do

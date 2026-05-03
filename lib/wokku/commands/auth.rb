@@ -44,6 +44,8 @@ end
 
 register "auth:whoami", "Show current user" do
   data = api(:get, "/auth/whoami")
-  puts "Email: #{data['email']}"
-  puts "Role:  #{data['role']}"
+  Wokku::Output.render(data) do |d|
+    puts "Email: #{d['email']}"
+    puts "Role:  #{d['role']}"
+  end
 end

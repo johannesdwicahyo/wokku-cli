@@ -4,11 +4,13 @@
 register "buildpacks", "List buildpacks (usage: wokku buildpacks APP)" do
   id = ARGV.shift || abort("Usage: wokku buildpacks APP")
   data = api(:get, "/apps/#{id}/buildpacks")
-  list = data.is_a?(Hash) ? Array(data["buildpacks"]) : Array(data)
-  if list.empty?
-    puts "(no buildpacks configured — auto-detected from source)"
-  else
-    list.each_with_index { |url, i| puts "#{i + 1}. #{url}" }
+  Wokku::Output.render(data) do |d|
+    list = d.is_a?(Hash) ? Array(d["buildpacks"]) : Array(d)
+    if list.empty?
+      puts "(no buildpacks configured — auto-detected from source)"
+    else
+      list.each_with_index { |url, i| puts "#{i + 1}. #{url}" }
+    end
   end
 end
 
