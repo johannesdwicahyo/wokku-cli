@@ -21,5 +21,23 @@ module Wokku
     def puts_json(data)
       puts JSON.pretty_generate(data)
     end
+
+    # Smart printer for read commands: prints raw API response as JSON when
+    # the global --json flag is set; otherwise yields to the human formatter.
+    def render(data)
+      if Wokku.json?
+        puts JSON.pretty_generate(data)
+      else
+        yield data
+      end
+    end
+
+    # Suppressible status / hint message. Silenced by --quiet or --json.
+    # Errors should NOT use this — they go through `abort` which writes to
+    # stderr and is never silenced.
+    def status(message)
+      return if Wokku.quiet? || Wokku.json?
+      puts message
+    end
   end
 end
