@@ -8,6 +8,19 @@ require "net/http"
 require "uri"
 require "io/console"
 require "fileutils"
+
+# Detect partial installs from pre-tarball versions of install.sh that
+# only fetched config/output/api_client. Re-running the installer pulls
+# the new lib/ tree (registry, helpers, commands/).
+required = %w[config output api_client registry helpers].map { |n| File.expand_path("lib/wokku/#{n}.rb", __dir__) }
+missing = required.reject { |f| File.exist?(f) }
+unless missing.empty?
+  warn "Wokku CLI is missing required library files (newer release)."
+  warn "Please re-run the installer:"
+  warn "  curl -sL https://wokku.cloud/cli/install.sh | bash"
+  exit 1
+end
+
 require_relative "lib/wokku/config"
 require_relative "lib/wokku/output"
 require_relative "lib/wokku/api_client"
