@@ -47,6 +47,7 @@ def puts_json(data) = Wokku::Output.puts_json(data)
 
 # === Commands ===
 require_relative "lib/wokku/registry"
+require_relative "lib/wokku/helpers"
 
 COMMANDS = Wokku::Registry::COMMANDS
 
@@ -247,14 +248,6 @@ register "domains:add", "Add domain (usage: wokku domains:add APP DOMAIN)" do
   domain = ARGV.shift || abort("Missing domain name")
   api(:post, "/apps/#{id}/domains", { hostname: domain })
   puts "Added domain: #{domain}"
-end
-
-# Look up a domain row by hostname so users can type the name they know
-# instead of an internal id. Returns the row or nil.
-def find_domain(app_id, hostname)
-  list = api(:get, "/apps/#{app_id}/domains")
-  return nil unless list.is_a?(Array)
-  list.find { |d| d["hostname"] == hostname }
 end
 
 register "domains:remove", "Remove a domain (usage: wokku domains:remove APP DOMAIN)" do
