@@ -14,6 +14,12 @@ RSpec.describe "addons commands" do
     end
   end
 
+  include_examples "respects --json",
+    command: "addons",
+    args: ["5"],
+    path: "/apps/5/addons",
+    fake_response: [{ "name" => "pg-1", "service_type" => "postgres", "status" => "ok" }]
+
   describe "addons:add" do
     it "POSTs with service_type" do
       fake.stub(:post, "/apps/5/addons", returns: { "name" => "pg-1" })

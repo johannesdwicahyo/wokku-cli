@@ -29,6 +29,11 @@ RSpec.describe "auth commands" do
     end
   end
 
+  include_examples "respects --json",
+    command: "auth:whoami",
+    path: "/auth/whoami",
+    fake_response: { "email" => "a@b.com", "role" => "admin" }
+
   describe "auth:logout" do
     it "deletes the config file when present" do
       Wokku::Config.save("token" => "tk_xyz", "email" => "a@b.com")

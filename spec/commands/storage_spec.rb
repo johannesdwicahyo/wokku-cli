@@ -34,6 +34,12 @@ RSpec.describe "storage commands" do
     end
   end
 
+  include_examples "respects --json",
+    command: "storage",
+    args: ["5"],
+    path: "/apps/5/storage",
+    fake_response: { "mounts" => ["/host:/container"] }
+
   describe "storage:unmount" do
     it "DELETEs with mount spec" do
       fake.stub(:delete, "/apps/5/storage", returns: {})

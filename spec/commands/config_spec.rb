@@ -45,6 +45,12 @@ RSpec.describe "config commands" do
     end
   end
 
+  include_examples "respects --json",
+    command: "config",
+    args: ["5"],
+    path: "/apps/5/config",
+    fake_response: { "FOO" => "bar" }
+
   describe "config:unset" do
     it "DELETEs /apps/:id/config with keys list" do
       fake.stub(:delete, "/apps/5/config", returns: {})
