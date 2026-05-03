@@ -3,6 +3,8 @@
 RSpec.describe "addons commands" do
   let(:fake) { FakeApiClient.new }
 
+  include_examples "passes APP through verbatim", command: "addons", path_pattern: "/apps/APP/addons", api_method: :get
+
   describe "addons" do
     it "lists addons" do
       fake.stub(:get, "/apps/5/addons", returns: [{ "name" => "pg-1", "service_type" => "postgres", "status" => "ok" }])

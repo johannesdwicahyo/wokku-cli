@@ -3,6 +3,8 @@
 RSpec.describe "storage commands" do
   let(:fake) { FakeApiClient.new }
 
+  include_examples "passes APP through verbatim", command: "storage", path_pattern: "/apps/APP/storage", api_method: :get
+
   describe "storage" do
     it "lists mounts" do
       fake.stub(:get, "/apps/5/storage", returns: { "mounts" => ["/host:/container"] })

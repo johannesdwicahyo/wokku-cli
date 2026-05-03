@@ -3,6 +3,8 @@
 RSpec.describe "process commands" do
   let(:fake) { FakeApiClient.new }
 
+  include_examples "passes APP through verbatim", command: "ps:restart", path_pattern: "/apps/APP/restart", api_method: :post
+
   shared_examples "simple POST action" do |command, path, output_match|
     it "POSTs #{path} and prints expected output" do
       fake.stub(:post, path, returns: {})

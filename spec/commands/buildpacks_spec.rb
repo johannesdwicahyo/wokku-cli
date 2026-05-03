@@ -3,6 +3,8 @@
 RSpec.describe "buildpacks commands" do
   let(:fake) { FakeApiClient.new }
 
+  include_examples "passes APP through verbatim", command: "buildpacks", path_pattern: "/apps/APP/buildpacks", api_method: :get
+
   describe "buildpacks" do
     it "lists numbered URLs" do
       fake.stub(:get, "/apps/5/buildpacks", returns: { "buildpacks" => ["a", "b"] })

@@ -28,6 +28,7 @@ module Wokku
     def delete(path, body = nil) = request(:delete, path, body)
 
     def request(method, path, body = nil)
+      @last_path = path
       raise NotAuthenticated, "Not logged in. Run: wokku auth:login" unless token
 
       uri = URI("#{url}#{path}")
@@ -83,12 +84,15 @@ module Wokku
       data = JSON.parse(resp.body) rescue resp.body
       return data if resp.is_a?(Net::HTTPSuccess)
 
-      msg = if data.is_a?(Hash)
-        data["error"] || data["errors"]&.join(", ") || resp.code
-      else
-        resp.code
+      raise Error, friendly_error(resp, data)
+    end
+
+    def friendly_error(resp, data)
+      if resp.code == "404" && (req_path = @last_path) && (m = req_path.match(%r{\A/apps/([^/?]+)}))
+        return "No app named '#{m[1]}'"
       end
-      raise Error, "Error: #{msg}"
+      msg = data.is_a?(Hash) ? (data["error"] || data["errors"]&.join(", ") || resp.code) : resp.code
+      "Error: #{msg}"
     end
   end
 end

@@ -3,6 +3,8 @@
 RSpec.describe "domains commands" do
   let(:fake) { FakeApiClient.new }
 
+  include_examples "passes APP through verbatim", command: "domains", path_pattern: "/apps/APP/domains", api_method: :get
+
   describe "domains" do
     it "lists hostnames" do
       fake.stub(:get, "/apps/5/domains", returns: [{ "id" => 1, "hostname" => "a.com" }, { "id" => 2, "hostname" => "b.com" }])

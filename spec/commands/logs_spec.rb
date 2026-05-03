@@ -3,6 +3,8 @@
 RSpec.describe "logs command" do
   let(:fake) { FakeApiClient.new }
 
+  include_examples "passes APP through verbatim", command: "logs", path_pattern: "/apps/APP/logs?lines=100", api_method: :get
+
   it "GETs /apps/:id/logs and prints array entries" do
     fake.stub(:get, "/apps/5/logs?lines=100", returns: ["line1", "line2"])
     result = CliRunner.run("logs", "5", api: fake)

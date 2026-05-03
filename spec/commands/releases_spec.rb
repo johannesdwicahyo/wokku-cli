@@ -3,6 +3,8 @@
 RSpec.describe "releases and rollback" do
   let(:fake) { FakeApiClient.new }
 
+  include_examples "passes APP through verbatim", command: "releases", path_pattern: "/apps/APP/releases", api_method: :get
+
   describe "releases" do
     it "GETs and tabulates" do
       fake.stub(:get, "/apps/5/releases", returns: [{ "version" => 3, "description" => "deploy", "created_at" => "2026-05-01T00:00:00Z" }])

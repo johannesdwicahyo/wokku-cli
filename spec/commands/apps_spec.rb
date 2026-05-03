@@ -47,6 +47,10 @@ RSpec.describe "apps commands" do
     end
   end
 
+  describe "apps:info name/UUID interchangeability" do
+    include_examples "passes APP through verbatim", command: "apps:info", path_pattern: "/apps/APP", api_method: :get
+  end
+
   describe "apps:destroy" do
     it "DELETEs /apps/:id when confirmed with y" do
       fake.stub(:delete, "/apps/7", returns: { "ok" => true })

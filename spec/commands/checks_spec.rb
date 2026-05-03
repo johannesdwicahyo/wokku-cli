@@ -3,6 +3,8 @@
 RSpec.describe "checks commands" do
   let(:fake) { FakeApiClient.new }
 
+  include_examples "passes APP through verbatim", command: "checks", path_pattern: "/apps/APP/checks", api_method: :get
+
   describe "checks" do
     it "GETs and prints JSON" do
       fake.stub(:get, "/apps/5/checks", returns: { "enabled" => true, "path" => "/healthz" })
