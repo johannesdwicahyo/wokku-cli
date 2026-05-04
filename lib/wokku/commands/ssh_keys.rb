@@ -6,7 +6,7 @@ register "ssh-keys", "List your SSH public keys" do
   Wokku::Output.render(data) do |list|
     table(list.map { |k| {
       "name" => k["name"],
-      "fingerprint" => "#{k['fingerprint'][0..30]}...",
+      "fingerprint" => "#{k['fingerprint'].to_s[0..30]}...",
       "created" => k["created_at"].to_s[0..18]
     } })
   end
@@ -30,7 +30,7 @@ register "ssh-keys:add", "Upload an SSH public key (usage: wokku ssh-keys:add [P
   Wokku::Output.status "Added SSH key '#{data['name']}' (#{data['fingerprint'][0..20]}...)"
 end
 
-register "ssh-keys:remove", "Remove an SSH public key (usage: wokku ssh-keys:remove NAME [--fingerprint SHA])" do
+register "ssh-keys:remove", "Remove an SSH public key (usage: wokku ssh-keys:remove NAME | --fingerprint SHA — fingerprint takes precedence)" do
   name = nil
   fingerprint = nil
   while arg = ARGV.shift

@@ -48,11 +48,13 @@ module Wokku
     end
 
     def stream(method, path, &block)
+      @last_path = path
       raise NotAuthenticated, "Not logged in. Run: wokku auth:login" unless token
 
       uri = URI("#{url}#{path}")
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = uri.scheme == "https"
+      # Local Net::HTTP instance — disabling read_timeout doesn't leak to other calls.
       http.read_timeout = nil
 
       req = build_request(method, uri)
