@@ -1,16 +1,33 @@
 # Changelog
 
-## 3.0.0 — 2026-05-04
+## 0.1.0 — 2026-05-04
 
-### Breaking
-- Distribution moved from `curl install.sh` tarball to RubyGems (`gem install wokku-cli`)
-- Source repo moved from `wokku-cloud/cli/` (private) to `johannesdwicahyo/wokku-cli` (public, MIT)
+First public release on RubyGems.
 
-### Migration
-- Existing `curl install.sh` users get the new `gem install` flow automatically (install.sh updated)
-- Brew users: `brew upgrade wokku` pulls v3.0.0 from RubyGems
-- Old tarball endpoints (`wokku.cloud/cli/wokku.tar.gz`, `/cli/wokku`, `/cli/lib/wokku/:name`) stay live for ~3 months serving frozen v2.x
+The wokku CLI was previously distributed as a tarball from `wokku.cloud/cli/wokku.tar.gz`. This is a fresh start under the `0.x` line — pre-1.0 means the surface may evolve as we gather feedback. Reach 1.0.0 once the API stabilizes.
 
-## Earlier history
+### Features
+- Apps: `apps`, `apps:create`, `apps:destroy`, `apps:info`
+- Process: `ps:start/stop/restart/scale/rebuild`, `redeploy`
+- Config: `config`, `config:set/get/unset`, `config:export` (.env-safe quoting)
+- Domains: `domains`, `domains:add/remove/clear`, `certs:enable`
+- Buildpacks: `buildpacks`, `buildpacks:add/remove/clear/set`
+- Health checks: `checks`, `checks:set`
+- Storage: `storage`, `storage:mount/unmount`
+- Releases: `releases`, `rollback`
+- Add-ons: `addons`, `addons:add`
+- Templates: `templates`, `deploy`
+- Activity: `activity`
+- Logs: `logs` with `--follow` / `-f` streaming
+- SSH keys: `ssh-keys`, `ssh-keys:add/remove`
+- Servers: `servers`, `servers:info`, `servers:default`
+- Databases: `databases`, `databases:create/destroy/info/link/unlink`
+- One-off: `wokku run APP -- COMMAND` (in-container)
+- Passthrough: `wokku do APP -- DOKKU_ARGS` (raw dokku command, audit-logged)
+- Authentication: `auth:login`, `auth:logout`, `auth:whoami`
+- Global flags: `--json` (machine-readable), `--quiet` / `-q`
 
-See `git log` — releases prior to 3.0.0 were tagged inside the wokku-cloud repo and distributed via tarball.
+### Distribution
+- Install: `gem install wokku-cli` or `brew install johannesdwicahyo/tap/wokku`
+- Source: <https://github.com/johannesdwicahyo/wokku-cli>
+- Old `curl install.sh` flow continues to work (delegates to `gem install wokku-cli`).
