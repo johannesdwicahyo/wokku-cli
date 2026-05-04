@@ -47,6 +47,27 @@ module Wokku
       parse_response(resp)
     end
 
+    def stream(method, path, &block)
+      raise NotAuthenticated, "Not logged in. Run: wokku auth:login" unless token
+
+      uri = URI("#{url}#{path}")
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = uri.scheme == "https"
+      http.read_timeout = nil
+
+      req = build_request(method, uri)
+      req["Authorization"] = "Bearer #{token}"
+      req["Accept"] = "text/plain"
+      req["User-Agent"] = @user_agent
+
+      http.request(req) do |resp|
+        raise Error, "Stream failed: HTTP #{resp.code}" unless resp.is_a?(Net::HTTPSuccess)
+        resp.read_body { |chunk| block.call(chunk) }
+      end
+    rescue Interrupt
+      # Ctrl-C — exit gracefully
+    end
+
     private
 
     def url
