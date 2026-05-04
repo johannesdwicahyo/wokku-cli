@@ -67,4 +67,32 @@ RSpec.describe "config commands" do
       expect(fake.calls.first.body).to eq(keys: %w[FOO BAZ])
     end
   end
+
+  describe "config:export" do
+    it "prints KEY=\"value\" lines" do
+      fake.stub(:get, "/apps/5/config", returns: { "FOO" => "bar", "PORT" => "3000" })
+      result = CliRunner.run("config:export", "5", api: fake)
+      expect(result.exit_code).to eq(0)
+      expect(result.stdout).to include(%Q(FOO="bar"))
+      expect(result.stdout).to include(%Q(PORT="3000"))
+    end
+
+    it "escapes embedded double quotes and backslashes" do
+      fake.stub(:get, "/apps/5/config", returns: { "TRICKY" => %q(a"b\c) })
+      result = CliRunner.run("config:export", "5", api: fake)
+      expect(result.exit_code).to eq(0)
+      expect(result.stdout).to include(%q(TRICKY="a\"b\\\\c"))
+    end
+
+    it "aborts when APP missing" do
+      result = CliRunner.run("config:export", api: fake)
+      expect(result.exit_code).not_to eq(0)
+    end
+
+    include_examples "respects --json",
+      command: "config:export",
+      args: ["5"],
+      path: "/apps/5/config",
+      fake_response: { "FOO" => "bar" }
+  end
 end

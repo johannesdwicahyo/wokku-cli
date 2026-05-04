@@ -24,4 +24,22 @@ RSpec.describe "logs command" do
     args: ["5"],
     path: "/apps/5/logs?lines=100",
     fake_response: ["line1", "line2"]
+
+  describe "--follow" do
+    it "streams chunks via ApiClient#stream" do
+      fake = FakeApiClient.new
+      fake.stub(:get, "/apps/5/logs?follow=1", returns: ["chunk1\n", "chunk2\n"])
+      result = CliRunner.run("logs", "5", "--follow", api: fake)
+      expect(result.exit_code).to eq(0)
+      expect(result.stdout).to eq("chunk1\nchunk2\n")
+    end
+
+    it "accepts -f as a short form" do
+      fake = FakeApiClient.new
+      fake.stub(:get, "/apps/5/logs?follow=1", returns: ["x\n"])
+      result = CliRunner.run("logs", "5", "-f", api: fake)
+      expect(result.exit_code).to eq(0)
+      expect(result.stdout).to include("x")
+    end
+  end
 end

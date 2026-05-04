@@ -39,6 +39,18 @@ register "config:get", "Show one config var (usage: wokku config:get APP KEY)" d
   Wokku::Output.render({ "key" => key, "value" => vars[key] }) { |_| puts vars[key] }
 end
 
+register "config:export", "Export config as .env (usage: wokku config:export APP)" do
+  id = ARGV.shift || abort("Usage: wokku config:export APP")
+  data = api(:get, "/apps/#{id}/config")
+  vars = data.is_a?(Hash) ? (data["config"] || data) : {}
+  Wokku::Output.render(vars) do |d|
+    d.each do |k, v|
+      escaped = v.to_s.gsub('\\') { '\\\\' }.gsub('"') { '\\"' }
+      puts %Q(#{k}="#{escaped}")
+    end
+  end
+end
+
 register "config:unset", "Remove config vars (usage: wokku config:unset APP KEY [KEY...])" do
   id = ARGV.shift || abort("Usage: wokku config:unset APP KEY [KEY...]")
   keys = ARGV.dup

@@ -47,4 +47,39 @@ RSpec.describe Wokku::ApiClient do
       .to_return(status: 404, body: '{"error":"Couldn\'t find AppRecord"}')
     expect { client.get("/apps/missing") }.to raise_error(Wokku::ApiClient::Error, /No app named 'missing'/)
   end
+
+  describe "#stream" do
+    it "yields chunks from a successful streaming response" do
+      stub_request(:get, "https://example.test/api/v1/apps/5/logs?follow=1")
+        .with(headers: { "Authorization" => "Bearer tk_test" })
+        .to_return(status: 200, body: "chunk1\nchunk2\n", headers: { "Content-Type" => "text/plain" })
+
+      received = []
+      client.stream(:get, "/apps/5/logs?follow=1") { |chunk| received << chunk }
+      expect(received.join).to eq("chunk1\nchunk2\n")
+    end
+
+    it "raises Error on non-2xx response" do
+      stub_request(:get, "https://example.test/api/v1/apps/5/logs?follow=1")
+        .to_return(status: 503, body: "down")
+      expect {
+        client.stream(:get, "/apps/5/logs?follow=1") { |_| }
+      }.to raise_error(Wokku::ApiClient::Error, /HTTP 503/)
+    end
+
+    it "raises NotAuthenticated when token is missing" do
+      no_auth = described_class.new(url: "https://example.test/api/v1", token: nil)
+      allow(Wokku::Config).to receive(:api_token).and_return(nil)
+      expect {
+        no_auth.stream(:get, "/apps/5/logs?follow=1") { |_| }
+      }.to raise_error(Wokku::ApiClient::NotAuthenticated)
+    end
+
+    it "exits gracefully on Interrupt (Ctrl-C)" do
+      stub_request(:get, "https://example.test/api/v1/apps/5/logs?follow=1").to_return(status: 200, body: "x")
+      expect {
+        client.stream(:get, "/apps/5/logs?follow=1") { |_| raise Interrupt }
+      }.not_to raise_error
+    end
+  end
 end
