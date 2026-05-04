@@ -29,7 +29,7 @@ module CliRunner
     $stderr = captured_err
 
     begin
-      exit_code = dispatch(expanded)
+      exit_code = Wokku::CLI.dispatch(expanded)
     rescue SystemExit => e
       exit_code = e.status || 1
     ensure

@@ -7,10 +7,8 @@ require "stringio"
 # Isolate config from the user's real ~/.wokku
 ENV["WOKKU_CONFIG_DIR"] ||= Dir.mktmpdir("wokku-spec-config")
 
-# Load CLI in-process. Idempotent because of $PROGRAM_NAME guard.
-# Use `load` rather than `require_relative` because the wokku entry point has
-# no `.rb` extension.
-load File.expand_path("../wokku", __dir__)
+# Load CLI in-process via the gem-style entry point.
+require_relative "../lib/wokku"
 
 Dir[File.join(__dir__, "support/**/*.rb")].each { |f| require f }
 
