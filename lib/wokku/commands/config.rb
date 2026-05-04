@@ -45,7 +45,7 @@ register "config:export", "Export config as .env (usage: wokku config:export APP
   vars = data.is_a?(Hash) ? (data["config"] || data) : {}
   Wokku::Output.render(vars) do |d|
     d.each do |k, v|
-      escaped = v.to_s.gsub('"') { '\\"' }
+      escaped = v.to_s.gsub('\\') { '\\\\' }.gsub('"') { '\\"' }
       puts %Q(#{k}="#{escaped}")
     end
   end

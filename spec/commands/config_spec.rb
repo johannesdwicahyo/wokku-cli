@@ -81,7 +81,7 @@ RSpec.describe "config commands" do
       fake.stub(:get, "/apps/5/config", returns: { "TRICKY" => %q(a"b\c) })
       result = CliRunner.run("config:export", "5", api: fake)
       expect(result.exit_code).to eq(0)
-      expect(result.stdout).to include(%q(TRICKY="a\"b\\c"))
+      expect(result.stdout).to include(%q(TRICKY="a\"b\\\\c"))
     end
 
     it "aborts when APP missing" do
