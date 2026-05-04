@@ -4,7 +4,7 @@
 register "databases", "List your databases" do
   data = api(:get, "/databases")
   Wokku::Output.render(data) do |list|
-    table(list.map { |db| {
+    table(Array(list).map { |db| {
       "name" => db["name"],
       "type" => db["service_type"],
       "status" => db["status"],
