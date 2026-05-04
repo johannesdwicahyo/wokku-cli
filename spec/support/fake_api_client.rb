@@ -31,4 +31,12 @@ class FakeApiClient
     raise stub[:raises] if stub[:raises]
     stub[:returns]
   end
+
+  def stream(method, path, &block)
+    @calls << Call.new(method: method, path: path, body: nil)
+    key = [method, path]
+    stub = @stubs[key]
+    raise Wokku::ApiClient::Error, "No stub for stream #{method.upcase} #{path}" unless stub
+    Array(stub[:returns]).each { |chunk| block.call(chunk) }
+  end
 end
