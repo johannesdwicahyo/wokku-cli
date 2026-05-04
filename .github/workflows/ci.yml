@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  rspec:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.4.3
+          bundler-cache: true
+      - run: bundle exec rspec
+
+  gem-build-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.4.3
+          bundler-cache: true
+      - run: gem build wokku-cli.gemspec
+      - name: Install gem locally and smoke
+        run: |
+          gem install --local --user-install ./wokku-cli-*.gem
+          export PATH="$(ruby -e 'puts Gem.user_dir')/bin:$PATH"
+          wokku version
+          wokku --help | head -5
+
+  command-count:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.4.3
+          bundler-cache: true
+      - name: Check command count matches help output
+        run: |
+          declared=$(grep -h '^register ' lib/wokku/commands/*.rb | wc -l | tr -d ' ')
+          listed=$(ruby -Ilib exe/wokku --help | grep -E '^  [a-z]' | wc -l | tr -d ' ')
+          if [ "$declared" -ne "$listed" ]; then
+            echo "Command count drift: $declared registered, $listed in help"
+            exit 1
+          fi
+          echo "Command count OK: $declared"
