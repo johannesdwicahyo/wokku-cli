@@ -16,6 +16,8 @@ Gem::Specification.new do |s|
   s.executables   = ["wokku"]
   s.require_paths = ["lib"]
 
+  s.add_dependency "websocket-driver", "~> 0.7"
+
   s.metadata = {
     "homepage_uri"          => "https://wokku.cloud",
     "source_code_uri"       => "https://github.com/johannesdwicahyo/wokku-cli",
