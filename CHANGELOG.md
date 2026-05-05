@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.2.0 — 2026-05-06
+
+Interactive shell over WebSocket: open a real PTY in your app's container, exec one-off commands, and connect to managed databases without leaving the terminal.
+
+### Added
+- `wokku enter APP` — interactive shell in the app's running container.
+- `wokku ps:exec APP [-t|-T] -- CMD [ARGS...]` — run a command in a one-off container (Heroku-`run`-style; auto-detects TTY, `-t`/`-T` overrides).
+- `wokku databases:connect DB` — interactive client for the managed database (psql / redis-cli / mysql via dokku's `<plugin>:connect`).
+
+### Internals
+- New `Wokku::CableClient` — thin `websocket-driver` wrapper, Bearer-token handshake on `/cable`.
+- New `Wokku::PtySession` — local raw-mode PTY orchestration with SIGWINCH resize and guaranteed `cooked!` restore.
+- Runtime dependency: `websocket-driver ~> 0.7`.
+
+### Requires
+- wokku-cloud server-side support shipped 2026-05-06 (Bearer auth on `ApplicationCable::Connection`, new `TerminalChannel` wire protocol with modes).
+
 ## 0.1.0 — 2026-05-04
 
 First public release on RubyGems.
