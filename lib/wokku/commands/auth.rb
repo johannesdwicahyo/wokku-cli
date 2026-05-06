@@ -1,34 +1,23 @@
 # frozen_string_literal: true
 
+DEFAULT_API_URL = "https://wokku.cloud/api/v1"
+
 # --- Auth ---
-register "auth:login", "Authenticate with Wokku" do
-  print "Wokku API URL [https://wokku.cloud/api/v1]: "
-  url = $stdin.gets.strip
-  url = "https://wokku.cloud/api/v1" if url.empty?
+register "auth:login", "Authenticate with Wokku (device flow; supports Google/GitHub OAuth users). Flags: --url URL, --password (legacy email+password)" do
+  url = DEFAULT_API_URL
+  use_password = false
+  while (arg = ARGV.shift)
+    case arg
+    when "--url" then url = ARGV.shift or abort "--url requires a value"
+    when "--password" then use_password = true
+    else abort "Unknown argument: #{arg}"
+    end
+  end
 
-  print "Email: "
-  email = $stdin.gets.strip
-  print "Password: "
-  password = ($stdin.respond_to?(:noecho) ? $stdin.noecho(&:gets) : $stdin.gets).strip
-  puts
-
-  uri = URI("#{url}/auth/login")
-  http = Net::HTTP.new(uri.host, uri.port)
-  http.use_ssl = uri.scheme == "https"
-  req = Net::HTTP::Post.new(uri)
-  req["Content-Type"] = "application/json"
-  req.body = { email: email, password: password }.to_json
-
-  resp = http.request(req)
-  data = JSON.parse(resp.body) rescue {}
-
-  if resp.is_a?(Net::HTTPSuccess) && data["token"]
-    save_config({ "api_url" => url, "token" => data["token"], "email" => email })
-    instance = url.include?("wokku.cloud") ? "wokku.cloud (managed)" : "#{URI(url).host} (self-hosted)"
-    Wokku::Output.status "Logged in as #{email}"
-    Wokku::Output.status "Connected to: #{instance}"
+  if use_password
+    Wokku::Auth.login_with_password!(url)
   else
-    abort "Login failed: #{data['error'] || resp.code}"
+    Wokku::Auth.login_with_device_flow!(url)
   end
 end
 

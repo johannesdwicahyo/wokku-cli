@@ -11,6 +11,7 @@ require "wokku/output"
 require "wokku/api_client"
 require "wokku/registry"
 require "wokku/helpers"
+require "wokku/auth"
 
 module Wokku
   class << self
