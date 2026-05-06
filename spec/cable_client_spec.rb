@@ -16,11 +16,17 @@ RSpec.describe Wokku::CableClient do
 
   it "passes Bearer token in handshake header" do
     expect(driver).to receive(:set_header).with("Authorization", "Bearer abc123")
+    expect(driver).to receive(:set_header).with("Origin", "http://api.example")
     Wokku::CableClient.new(url: "ws://api.example/cable", token: "abc123")
   end
 
-  it "does not set header when token is empty" do
-    expect(driver).not_to receive(:set_header)
+  it "sets Origin to the cable host so ActionCable's same-origin check passes" do
+    expect(driver).to receive(:set_header).with("Origin", "http://api.example:3000")
+    Wokku::CableClient.new(url: "ws://api.example:3000/cable", token: "tok")
+  end
+
+  it "does not set Authorization header when token is empty" do
+    expect(driver).not_to receive(:set_header).with("Authorization", anything)
     Wokku::CableClient.new(url: "ws://api.example/cable", token: "")
   end
 

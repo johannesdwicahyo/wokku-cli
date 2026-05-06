@@ -20,8 +20,18 @@ module Wokku
       @socket = open_socket
       @driver = WebSocket::Driver.client(self)
       @driver.set_header("Authorization", "Bearer #{@token}") if @token && !@token.empty?
+      @driver.set_header("Origin", origin_header)
       attach_driver_callbacks
       @driver.start
+    end
+
+    # Origin matches the cable host so ActionCable's same-origin check passes.
+    # CSRF concerns don't apply: the CLI authenticates via Bearer token, not
+    # a cookie-borne session, so cross-site forgery is not a vector here.
+    def origin_header
+      scheme = @uri.scheme == "wss" ? "https" : "http"
+      port = (@uri.port && ![ 80, 443 ].include?(@uri.port)) ? ":#{@uri.port}" : ""
+      "#{scheme}://#{@uri.host}#{port}"
     end
 
     # WebSocket::Driver duck-types these on its socket adapter:
