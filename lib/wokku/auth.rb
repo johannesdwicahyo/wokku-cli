@@ -7,13 +7,10 @@ require "uri"
 module Wokku
   # Authentication flows for `wokku auth:login`.
   #
-  # Device flow (default): suitable for OAuth-only users (Google/GitHub).
   # CLI requests a device_code + user_code from /auth/device/code, opens
   # the verification URL in the browser, and polls /auth/device/token
   # until the user approves the session in the dashboard. Server returns
   # an api_token which the CLI persists to ~/.wokku/config.
-  #
-  # Password flow (--password): legacy email+password against /auth/login.
   module Auth
     POLL_FLOOR = 1.0  # don't poll faster than 1s regardless of server hint
 
@@ -74,22 +71,6 @@ module Wokku
           abort "Login failed: #{resp.code} #{body['error']}"
         end
       end
-    end
-
-    def login_with_password!(url)
-      require "io/console"
-      print "Email: "
-      email = $stdin.gets.to_s.strip
-      print "Password: "
-      password = ($stdin.respond_to?(:noecho) ? $stdin.noecho(&:gets) : $stdin.gets).to_s.strip
-      puts
-
-      data = post_json(url, "/auth/login", { email: email, password: password })
-      abort "Login failed" unless data["token"]
-
-      save_config({ "api_url" => url, "token" => data["token"], "email" => email })
-      Wokku::Output.status "Logged in as #{email}"
-      Wokku::Output.status "Connected to: #{instance_label(url)}"
     end
 
     def post_json(base_url, path, payload)

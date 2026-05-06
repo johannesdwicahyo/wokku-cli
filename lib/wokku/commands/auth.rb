@@ -3,22 +3,16 @@
 DEFAULT_API_URL = "https://wokku.cloud/api/v1"
 
 # --- Auth ---
-register "auth:login", "Authenticate with Wokku (device flow; supports Google/GitHub OAuth users). Flags: --url URL, --password (legacy email+password)" do
+register "auth:login", "Authenticate with Wokku via browser device flow. Flag: --url URL (for self-hosted)" do
   url = DEFAULT_API_URL
-  use_password = false
   while (arg = ARGV.shift)
     case arg
     when "--url" then url = ARGV.shift or abort "--url requires a value"
-    when "--password" then use_password = true
     else abort "Unknown argument: #{arg}"
     end
   end
 
-  if use_password
-    Wokku::Auth.login_with_password!(url)
-  else
-    Wokku::Auth.login_with_device_flow!(url)
-  end
+  Wokku::Auth.login_with_device_flow!(url)
 end
 
 register "auth:logout", "Log out" do

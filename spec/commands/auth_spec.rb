@@ -42,18 +42,6 @@ RSpec.describe "auth commands" do
       expect(Wokku::Config.load).to include("token" => "tk_xyz", "email" => "a@b.com")
     end
 
-    it "supports legacy email+password flow with --password" do
-      stub_request(:post, "https://example.test/api/v1/auth/login")
-        .with(body: { email: "a@b.com", password: "secret" }.to_json)
-        .to_return(status: 200, body: { token: "tk_xyz" }.to_json)
-
-      stdin = "a@b.com\nsecret\n"
-      result = CliRunner.run("auth:login", "--url", "https://example.test/api/v1", "--password", stdin: stdin)
-
-      expect(result.exit_code).to eq(0)
-      expect(result.stdout).to include("Logged in as a@b.com")
-      expect(Wokku::Config.load).to include("token" => "tk_xyz", "email" => "a@b.com")
-    end
   end
 
   include_examples "respects --json",
