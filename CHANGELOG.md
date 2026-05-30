@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.3.0 — 2026-05-31
+
+Bundle v2 — boxes, shared addons (user-pick per box), and dedicated upgrades for PostgreSQL / MySQL / MongoDB / Redis. Pairs with wokku-cloud Phase 7 prep PRs #67–#73.
+
+### Added
+- `apps:create` gains `--box-size SIZE` (sleeping/small/medium/large/xlarge), `--shared pg,redis,...` (comma-separated shared engines to attach), `--dedicated-db postgres|mysql|mongodb`, `--dedicated-redis`. All optional — omitting them keeps the old free-tier default.
+- `addons:shared:enable APP ENGINE` — attach a shared engine (Pg/Redis/Memcached/RabbitMQ/Meilisearch). Free plan limited to Pg+Redis.
+- `addons:shared:disable APP ENGINE` — detach a shared engine + destroy its tenant data.
+- `addons:dedicated:upgrade APP ENGINE` — upgrade to a dedicated container. Pg/Redis migrate from shared (data preserved). MySQL/MongoDB are fresh-create. Quota: 3 per plan; size follows the box size.
+- `addons` listing now shows `kind: shared|dedicated` per row.
+
+### Deprecated
+- `addons:add` — kept for back-compat with wokku-cloud servers that haven't flipped `BUNDLE_V2_ENABLED=true` yet. When the server has bundle v2 on, this endpoint returns 410 Gone with guidance to use the new commands above.
+
+### Requires
+- wokku-cloud server-side support shipped 2026-05-31 (Phase 7 prep PRs #67–#73).
+
 ## 0.2.0 — 2026-05-06
 
 Interactive shell over WebSocket: open a real PTY in your app's container, exec one-off commands, and connect to managed databases without leaving the terminal.
