@@ -39,5 +39,14 @@ module Wokku
       return if Wokku.quiet? || Wokku.json?
       puts message
     end
+
+    # Non-fatal warning (e.g. partial-success cases like "app created
+    # but the dedicated DB upgrade failed to enqueue"). Stderr so it
+    # doesn't pollute pipeable stdout; visible even with --quiet but
+    # silenced under --json (the JSON response carries the warning).
+    def warn(message)
+      return if Wokku.json?
+      $stderr.puts "WARNING: #{message}"
+    end
   end
 end
