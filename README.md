@@ -1,6 +1,8 @@
 # wokku-cli
 
-CLI for [Wokku](https://wokku.cloud) — deploy and manage apps, databases, domains, and SSH keys on Wokku.cloud or self-hosted Wokku servers.
+CLI for [Wokku Cloud](https://wokku.cloud) — deploy and manage apps, databases, domains, and SSH keys.
+
+> **Wokku Cloud only.** This CLI talks to the Wokku REST API, which ships only with the managed Wokku Cloud product. The open-source Wokku web UI ([github.com/johannesdwicahyo/wokku](https://github.com/johannesdwicahyo/wokku)) does not expose `/api/v1`, so the CLI cannot point at a self-hosted Wokku install. Self-host users should use the web UI directly, or `ssh dokku@your-host` for command-line operations.
 
 ## Install
 
@@ -56,15 +58,10 @@ If you find yourself running the same `wokku do` invocation repeatedly, open an 
 Set once and forget:
 
 ```sh
-export WOKKU_API_URL=https://wokku.cloud/api/v1   # default
-export WOKKU_API_TOKEN=...                          # from wokku.cloud/dashboard/profile
+export WOKKU_API_TOKEN=...   # from wokku.cloud/dashboard/profile
 ```
 
-Self-hosted? Point `WOKKU_API_URL` at your own instance:
-
-```sh
-export WOKKU_API_URL=https://paas.mycompany.com/api/v1
-```
+`WOKKU_API_URL` defaults to `https://wokku.cloud/api/v1` and shouldn't need to change.
 
 ## What's New in v0.2.0 (May 2026)
 
