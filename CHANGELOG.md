@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.0 — 2026-06-01
+
+MCP commands — wire the wokku-plugin Claude Code MCP server with one command. Pairs with wokku-cloud canonical backlog 1.3.
+
+### Added
+
+- `wokku mcp:install` — registers the Wokku MCP server in Claude Code using the active CLI token + API URL.
+- `wokku mcp:switch` — re-pushes the current CLI token to the MCP config (after `auth:login` swapped accounts).
+- `wokku mcp:logout` — removes the Wokku MCP server from Claude Code.
+
+Shells out to `claude mcp add / remove` so we don't depend on Claude Code's internal config-file layout (it changes between versions). Aborts with a clear "install Claude Code first" error if the `claude` CLI isn't on PATH.
+
 ## 0.3.0 — 2026-05-31
 
 Bundle v2 — boxes, shared addons (user-pick per box), and dedicated upgrades for PostgreSQL / MySQL / MongoDB / Redis. Pairs with wokku-cloud Phase 7 prep PRs #67–#73.
