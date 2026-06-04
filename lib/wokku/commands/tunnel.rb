@@ -111,6 +111,13 @@ register "tunnel",
   cfg.write(<<~TOML)
     serverAddr = "#{frps_host}"
     serverPort = #{frps_port}
+    loginFailExit = true
+
+    # Top-level metadatas: sent on the frpc Login op so the gateway can
+    # authenticate the client up-front. Without this, frps sees no token
+    # on Login and rejects the whole connection before any proxy is set up.
+    [metadatas]
+    token = "#{token}"
 
     [[proxies]]
     name      = "wokku-#{sub}"
@@ -118,6 +125,8 @@ register "tunnel",
     localPort = #{local_port}
     subdomain = "#{sub}"
 
+    # Per-proxy metadatas: sent on NewProxy so the gateway can confirm
+    # the proxy registration is for the same session it auth'd at Login.
     [proxies.metadatas]
     token = "#{token}"
   TOML

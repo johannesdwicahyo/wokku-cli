@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.1 — 2026-06-04
+
+### Fixed
+
+- `wokku tunnel` — generated `frpc.toml` now writes the session token to a top-level `[metadatas]` block (in addition to `[proxies.metadatas]`). Without the top-level block frpc sent no token on the Login op, so the gateway rejected the connection before any proxy was set up. Adds `loginFailExit = true` so frpc bails immediately on auth failure instead of retrying forever.
+
 ## 0.5.0 — 2026-06-04
 
 `wokku tunnel` — share a local port at `https://<sub>.wokku.dev` in one command. Pairs with wokku-cloud canonical backlog 3.4.
