@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.0 — 2026-06-04
+
+`wokku tunnel` — share a local port at `https://<sub>.wokku.dev` in one command. Pairs with wokku-cloud canonical backlog 3.4.
+
+### Added
+
+- `wokku tunnel PORT [--subdomain S] [--app A]` — provisions a tunnel session via `POST /api/v1/tunnels`, downloads `frpc` v0.62.1 to `~/.wokku/bin/` on first run (~10 MB, one time), writes a per-process `frpc.toml`, execs frpc against the wokku-tunnel gateway, and closes the session on Ctrl-C.
+
+Plan-tiered: Free gets 1 tunnel with a random subdomain and 2h timeout (watermarked); Solo+ unlocks custom subdomains and 3+ concurrent tunnels with no timeout. Server-side enforcement — the CLI just surfaces whichever the API returned.
+
 ## 0.4.0 — 2026-06-01
 
 MCP commands — wire the wokku-plugin Claude Code MCP server with one command. Pairs with wokku-cloud canonical backlog 1.3.
