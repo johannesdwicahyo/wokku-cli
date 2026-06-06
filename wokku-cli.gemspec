@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
   s.authors       = ["Johannes Dwicahyo"]
   s.email         = ["johannesdwicahyo@gmail.com"]
   s.summary       = "Wokku CLI — manage your Wokku apps from the terminal"
-  s.description   = "Deploy and manage apps, databases, domains, and SSH keys on Wokku.cloud or self-hosted Wokku servers."
+  s.description   = "Deploy and manage apps, databases, domains, and SSH keys on Wokku.cloud (managed cloud)."
   s.homepage      = "https://wokku.cloud"
   s.license       = "MIT"
   s.required_ruby_version = ">= 3.2.0"

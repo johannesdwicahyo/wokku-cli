@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.2 — 2026-06-06
+
+### Changed
+
+- API endpoint is now hard-locked to `https://wokku.cloud/api/v1`. Wokku is a managed-cloud product, so the endpoint is no longer configurable: removed the `WOKKU_API_URL` env override, the `auth:login --url` flag, and persisting `api_url` to `~/.wokku/config`. `mcp:install`/`mcp:switch` now pass only the token to the plugin (the MCP plugin's endpoint is fixed too, v1.2.0). Eliminates the class of bug where a stale/wrong API URL silently pointed the CLI at a dead host.
+
 ## 0.5.1 — 2026-06-04
 
 ### Fixed
