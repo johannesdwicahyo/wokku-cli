@@ -27,15 +27,14 @@ def require_logged_in!
 end
 
 def install_mcp_entry!
-  url   = Wokku::Config.api_url
   token = Wokku::Config.api_token
 
   # Idempotent — silently no-ops if the entry doesn't exist yet.
   system("claude mcp remove #{Shellwords.escape(MCP_SERVER_NAME)} > /dev/null 2>&1")
 
+  # Only the token is passed — the plugin's endpoint is fixed to wokku.cloud.
   ok = system(
     "claude", "mcp", "add", MCP_SERVER_NAME,
-    "--env", "WOKKU_API_URL=#{url}",
     "--env", "WOKKU_API_TOKEN=#{token}",
     "--", "npx", "-y", "@johannesdwicahyo/wokku-plugin"
   )

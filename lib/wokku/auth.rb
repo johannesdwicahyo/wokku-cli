@@ -50,7 +50,7 @@ module Wokku
         when 200
           token = body.fetch("token")
           email = body.dig("user", "email")
-          save_config({ "api_url" => url, "token" => token, "email" => email })
+          save_config({ "token" => token, "email" => email })
           puts
           Wokku::Output.status "Logged in as #{email}"
           Wokku::Output.status "Connected to: #{instance_label(url)}"

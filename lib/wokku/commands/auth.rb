@@ -1,18 +1,12 @@
 # frozen_string_literal: true
 
-DEFAULT_API_URL = "https://wokku.cloud/api/v1"
-
 # --- Auth ---
-register "auth:login", "Authenticate with Wokku via browser device flow. Flag: --url URL (for self-hosted)" do
-  url = DEFAULT_API_URL
+register "auth:login", "Authenticate with Wokku via browser device flow" do
   while (arg = ARGV.shift)
-    case arg
-    when "--url" then url = ARGV.shift or abort "--url requires a value"
-    else abort "Unknown argument: #{arg}"
-    end
+    abort "Unknown argument: #{arg}"
   end
 
-  Wokku::Auth.login_with_device_flow!(url)
+  Wokku::Auth.login_with_device_flow!(Wokku::Config.api_url)
 end
 
 register "auth:logout", "Log out" do

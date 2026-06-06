@@ -15,17 +15,17 @@ RSpec.describe "auth commands" do
   end
 
   describe "auth:login (device flow)" do
-    it "starts a device-code session, polls until approval, saves the token" do
-      stub_request(:post, "https://example.test/api/v1/auth/device/code")
+    it "starts a device-code session against wokku.cloud, polls until approval, saves the token" do
+      stub_request(:post, "https://wokku.cloud/api/v1/auth/device/code")
         .to_return(status: 200, body: {
           device_code: "dev_abc",
           user_code: "AAAA-BBBB",
-          verification_uri_complete: "https://example.test/dashboard/device?user_code=AAAA-BBBB",
+          verification_uri_complete: "https://wokku.cloud/dashboard/device?user_code=AAAA-BBBB",
           interval: 0,
           expires_in: 600
         }.to_json)
 
-      stub_request(:post, "https://example.test/api/v1/auth/device/token")
+      stub_request(:post, "https://wokku.cloud/api/v1/auth/device/token")
         .with(body: { device_code: "dev_abc" }.to_json)
         .to_return(
           { status: 202, body: { error: "authorization_pending" }.to_json },
@@ -35,13 +35,18 @@ RSpec.describe "auth commands" do
       allow(Wokku::Auth).to receive(:open_browser)  # don't actually launch a browser
       allow(Wokku::Auth).to receive(:sleep_for)     # speed up the poll loop in tests
 
-      result = CliRunner.run("auth:login", "--url", "https://example.test/api/v1")
+      result = CliRunner.run("auth:login")
 
       expect(result.exit_code).to eq(0)
       expect(result.stdout).to include("AAAA-BBBB").and include("Logged in as a@b.com")
       expect(Wokku::Config.load).to include("token" => "tk_xyz", "email" => "a@b.com")
     end
 
+    it "rejects a --url override (endpoint is fixed to wokku.cloud)" do
+      result = CliRunner.run("auth:login", "--url", "https://evil.test/api/v1")
+      expect(result.exit_code).not_to eq(0)
+      expect(result.stderr).to include("Unknown argument")
+    end
   end
 
   include_examples "respects --json",
