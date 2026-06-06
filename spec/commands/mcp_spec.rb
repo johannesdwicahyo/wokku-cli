@@ -3,7 +3,7 @@
 RSpec.describe "mcp commands" do
   before do
     # Token-required commands abort otherwise — stash a fake one.
-    Wokku::Config.save("token" => "tk_test", "api_url" => "https://example.test/api/v1")
+    Wokku::Config.save("token" => "tk_test")
   end
 
   after { File.delete(Wokku::Config.file) if File.exist?(Wokku::Config.file) }
@@ -28,8 +28,10 @@ RSpec.describe "mcp commands" do
       remove_call = calls.find { |a| a.first&.include?("claude mcp remove") }
       add_call    = calls.find { |a| a.include?("add") }
       expect(remove_call).not_to be_nil
-      expect(add_call).to include("WOKKU_API_URL=https://example.test/api/v1")
+      # The endpoint is fixed to wokku.cloud in the plugin, so the CLI
+      # only passes the token — never a WOKKU_API_URL override.
       expect(add_call).to include("WOKKU_API_TOKEN=tk_test")
+      expect(add_call.none? { |a| a.to_s.start_with?("WOKKU_API_URL=") }).to be(true)
     end
   end
 

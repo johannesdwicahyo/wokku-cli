@@ -30,8 +30,12 @@ module Wokku
       File.chmod(0600, file)
     end
 
+    # Wokku is managed-cloud only — the endpoint is fixed and intentionally
+    # NOT overridable (no config key, no env var). Mirrors the MCP plugin.
+    API_URL = "https://wokku.cloud/api/v1"
+
     def api_url
-      load["api_url"] || ENV["WOKKU_API_URL"] || "https://wokku.cloud/api/v1"
+      API_URL
     end
 
     def api_token

@@ -61,7 +61,7 @@ Set once and forget:
 export WOKKU_API_TOKEN=...   # from wokku.cloud/dashboard/profile
 ```
 
-`WOKKU_API_URL` defaults to `https://wokku.cloud/api/v1` and shouldn't need to change.
+The API endpoint is fixed to `https://wokku.cloud/api/v1` and is not configurable (Wokku is managed-cloud only).
 
 ## What's New in v0.2.0 (May 2026)
 
