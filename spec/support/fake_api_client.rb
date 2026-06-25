@@ -17,6 +17,14 @@ class FakeApiClient
     self
   end
 
+  # Stage a list of responses returned on successive calls; the last value
+  # repeats once exhausted. Used to simulate a resource transitioning state
+  # across poll iterations.
+  def stub_sequence(method, path, values)
+    @stubs[[method, path]] = { sequence: values.dup }
+    self
+  end
+
   %i[get post put patch delete].each do |verb|
     define_method(verb) do |path, body = nil|
       request(verb, path, body)
@@ -25,9 +33,14 @@ class FakeApiClient
 
   def request(method, path, body = nil)
     @calls << Call.new(method: method, path: path, body: body)
-    key = [method, path]
-    stub = @stubs[key]
+    stub = @stubs[[method, path]]
     raise Wokku::ApiClient::Error, "No stub for #{method.upcase} #{path}" unless stub
+
+    if stub.key?(:sequence)
+      seq = stub[:sequence]
+      return seq.length > 1 ? seq.shift : seq.first
+    end
+
     raise stub[:raises] if stub[:raises]
     stub[:returns]
   end
