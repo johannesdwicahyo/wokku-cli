@@ -80,6 +80,19 @@ rescue Wokku::ApiClient::NotAuthenticated, Wokku::ApiClient::Timeout,
   abort e.message
 end
 
+# Poll GET <path> until the block returns truthy (returns that data) or the
+# attempt budget is exhausted (returns nil). interval is injectable so specs
+# can run with no real sleep.
+def poll_until(path, attempts: 30, interval: 2)
+  attempts.times do |i|
+    data = api(:get, path)
+    return data if yield(data)
+
+    sleep(interval) if interval.positive? && i < attempts - 1
+  end
+  nil
+end
+
 def load_config = Wokku::Config.load
 def save_config(data) = Wokku::Config.save(data)
 def api_url = Wokku::Config.api_url
