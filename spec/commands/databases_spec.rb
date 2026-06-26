@@ -35,7 +35,7 @@ RSpec.describe "databases commands" do
 
   describe "databases:create" do
     it "POSTs with name, type, and explicit --server" do
-      fake.stub(:post, "/databases", returns: { "name" => "mypg", "service_type" => "postgres" })
+      fake.stub(:post, "/databases", returns: { "name" => "mypg", "service_type" => "postgres", "status" => "running" })
       result = CliRunner.run("databases:create", "mypg", "--type", "postgres", "--server", "jkt-01", api: fake)
       expect(result.exit_code).to eq(0)
       expect(result.stdout).to include("Created postgres database: mypg")
@@ -45,11 +45,27 @@ RSpec.describe "databases commands" do
 
     it "auto-picks the only server when --server omitted" do
       fake.stub(:get, "/servers", returns: [{ "name" => "jkt-01", "host" => "h" }])
-      fake.stub(:post, "/databases", returns: { "name" => "mypg", "service_type" => "postgres" })
+      fake.stub(:post, "/databases", returns: { "name" => "mypg", "service_type" => "postgres", "status" => "running" })
       result = CliRunner.run("databases:create", "mypg", "--type", "postgres", api: fake)
       expect(result.exit_code).to eq(0)
       post_call = fake.calls.find { |c| c.method == :post && c.path == "/databases" }
       expect(post_call.body).to include(server_id: "jkt-01")
+    end
+
+    it "prints Created only when the returned status is running" do
+      fake.stub(:post, "/databases", returns: { "name" => "myr", "service_type" => "redis", "status" => "running" })
+      result = CliRunner.run("databases:create", "myr", "--type", "redis", "--server", "jkt-01", api: fake)
+      expect(result.exit_code).to eq(0)
+      expect(result.stdout).to match(/created/i)
+    end
+
+    it "reports provisioning (not Created) when status is not running" do
+      fake.stub(:post, "/databases", returns: { "name" => "myr", "service_type" => "redis", "status" => "creating" })
+      fake.stub(:get, "/databases/myr", returns: { "name" => "myr", "service_type" => "redis", "status" => "creating" })
+      result = CliRunner.run("databases:create", "myr", "--type", "redis", "--server", "jkt-01", api: fake,
+                             env: { "WOKKU_POLL_INTERVAL" => "0", "WOKKU_POLL_ATTEMPTS" => "2" })
+      expect(result.stdout).to match(/provisioning/i)
+      expect(result.stdout).not_to match(/created redis/i)
     end
 
     it "aborts when --type is missing" do
