@@ -10,8 +10,10 @@ module CliRunner
 
   module_function
 
-  def run(*args, api: nil, stdin: "", json: nil, quiet: nil)
+  def run(*args, api: nil, stdin: "", json: nil, quiet: nil, env: {})
     Wokku.api_client = api if api
+    prev_env = {}
+    env.each { |k, v| prev_env[k] = ENV[k]; ENV[k] = v.to_s }
 
     captured_out = StringIO.new
     captured_err = StringIO.new
@@ -37,6 +39,7 @@ module CliRunner
       $stderr = original_stderr
       $stdin = real_stdin
       Wokku.api_client = nil
+      prev_env.each { |k, v| v.nil? ? ENV.delete(k) : ENV[k] = v }
     end
 
     Result.new(stdout: captured_out.string, stderr: captured_err.string, exit_code: exit_code)

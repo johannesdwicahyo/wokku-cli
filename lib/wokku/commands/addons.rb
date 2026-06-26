@@ -40,8 +40,26 @@ end
 register "addons:shared:enable", "Enable a shared engine on an app (usage: wokku addons:shared:enable APP ENGINE). ENGINE: postgres|redis|memcached|rabbitmq|meilisearch" do
   id     = ARGV.shift || abort("Usage: wokku addons:shared:enable APP ENGINE")
   engine = ARGV.shift || abort("Missing engine")
-  data   = api(:post, "/apps/#{id}/addons/shared", { engine: engine })
-  Wokku::Output.status(data["message"] || "Enabled shared #{engine} on #{id}")
+  api(:post, "/apps/#{id}/addons/shared", { engine: engine })
+
+  attempts = (ENV["WOKKU_POLL_ATTEMPTS"] || "30").to_i
+  interval = (ENV["WOKKU_POLL_INTERVAL"] || "2").to_f
+
+  Wokku::Output.status "Enabling shared #{engine} on #{id} — provisioning…" unless Wokku.quiet
+  final = poll_until("/apps/#{id}/addons", attempts: attempts, interval: interval) do |list|
+    row = Array(list).find { |a| a["service_type"] == engine && a["shared"] }
+    row && %w[running error].include?(row["status"])
+  end
+
+  row = Array(final).find { |a| a["service_type"] == engine && a["shared"] }
+  case row && row["status"]
+  when "running"
+    Wokku::Output.status "Shared #{engine} ready on #{id}."
+  when "error"
+    abort "Shared #{engine} failed to provision on #{id}. See the dashboard or re-run to retry."
+  else
+    Wokku::Output.status "Shared #{engine} still provisioning on #{id}. Check: wokku addons #{id}"
+  end
 end
 
 register "addons:shared:disable", "Disable a shared engine on an app (usage: wokku addons:shared:disable APP ENGINE)" do

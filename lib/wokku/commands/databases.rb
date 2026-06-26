@@ -32,7 +32,23 @@ register "databases:create", "Create a database (usage: wokku databases:create N
   abort "Missing --type (postgres, mysql, redis, mongo)" unless type
   server = resolve_server(explicit: server)
   data = api(:post, "/databases", { name: name, service_type: type, server_id: server })
-  Wokku::Output.status "Created #{data['service_type']} database: #{data['name']}"
+
+  if data["status"] != "running"
+    attempts = (ENV["WOKKU_POLL_ATTEMPTS"] || "15").to_i
+    interval = (ENV["WOKKU_POLL_INTERVAL"] || "2").to_f
+    data = poll_until("/databases/#{data['name']}", attempts: attempts, interval: interval) do |d|
+      %w[running error].include?(d["status"])
+    end || { "name" => name, "service_type" => type, "status" => "creating" }
+  end
+
+  case data["status"]
+  when "running"
+    Wokku::Output.status "Created #{data['service_type']} database: #{data['name']}"
+  when "error"
+    abort "Database '#{data['name']}' failed to provision."
+  else
+    Wokku::Output.status "Database '#{data['name']}' is still provisioning. Check: wokku databases:info #{data['name']}"
+  end
 end
 
 register "databases:destroy", "Destroy a database (usage: wokku databases:destroy NAME)" do

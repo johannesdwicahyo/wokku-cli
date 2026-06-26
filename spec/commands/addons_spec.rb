@@ -34,4 +34,42 @@ RSpec.describe "addons commands" do
       expect(fake.calls.first.body).to eq(service_type: "postgres", name: "custom")
     end
   end
+
+  describe "addons:shared:enable (poll-until-running)" do
+    it "reports success once the engine shows running" do
+      fake.stub(:post, "/apps/myapp/addons/shared",
+                returns: { "message" => "Shared redis enabled and provisioning queued." })
+      fake.stub_sequence(:get, "/apps/myapp/addons", [
+        [{ "service_type" => "redis", "shared" => true, "status" => "creating" }],
+        [{ "service_type" => "redis", "shared" => true, "status" => "running" }]
+      ])
+
+      result = CliRunner.run("addons:shared:enable", "myapp", "redis", api: fake,
+                             env: { "WOKKU_POLL_INTERVAL" => "0" })
+      expect(result.exit_code).to eq(0)
+      expect(result.stdout).to match(/ready/i)
+    end
+
+    it "reports failure when the engine shows error" do
+      fake.stub(:post, "/apps/myapp/addons/shared", returns: { "message" => "queued" })
+      fake.stub(:get, "/apps/myapp/addons",
+                returns: [{ "service_type" => "redis", "shared" => true, "status" => "error" }])
+
+      result = CliRunner.run("addons:shared:enable", "myapp", "redis", api: fake,
+                             env: { "WOKKU_POLL_INTERVAL" => "0" })
+      expect(result.exit_code).not_to eq(0)
+      # abort writes to stderr (standard CLI error convention).
+      expect(result.stderr).to match(/failed/i)
+    end
+
+    it "reports still-provisioning on timeout" do
+      fake.stub(:post, "/apps/myapp/addons/shared", returns: { "message" => "queued" })
+      fake.stub(:get, "/apps/myapp/addons",
+                returns: [{ "service_type" => "redis", "shared" => true, "status" => "creating" }])
+
+      result = CliRunner.run("addons:shared:enable", "myapp", "redis", api: fake,
+                             env: { "WOKKU_POLL_INTERVAL" => "0", "WOKKU_POLL_ATTEMPTS" => "2" })
+      expect(result.stdout).to match(/still provisioning/i)
+    end
+  end
 end
