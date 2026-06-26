@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.3 — 2026-06-26
+
+### Fixed
+
+- `databases:create` and `addons:shared:enable` no longer report success optimistically. The CLI used to print "Created"/"Enabled" on any 2xx — including a `202 Accepted` ("queued") — so a database or shared engine that was still provisioning, or that failed afterward, looked done. Both commands now poll until the resource is actually `running` (then "Created"/"ready"), `error` (a clear failure + nonzero exit), or a timeout ("still provisioning — check `wokku addons APP` / `databases:info`"). Poll cadence is tunable via `WOKKU_POLL_ATTEMPTS`/`WOKKU_POLL_INTERVAL`.
+
 ## 0.5.2 — 2026-06-06
 
 ### Changed
