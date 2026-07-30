@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.0 — 2026-07-30
+
+### Removed
+
+- Removed `do`, `buildpacks`, `storage`, and log-drain commands — the underlying wokku-cloud endpoints were retired when the platform moved off Dokku (Track B). `wokku logs` is unchanged.
+
 ## 0.5.3 — 2026-06-26
 
 ### Fixed
