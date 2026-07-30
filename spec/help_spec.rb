@@ -7,7 +7,6 @@ RSpec.describe "wokku --help" do
       addons addons:add
       apps apps:create apps:destroy apps:info
       auth:login auth:logout auth:whoami
-      buildpacks buildpacks:add buildpacks:clear buildpacks:remove buildpacks:set
       certs:enable
       checks checks:set
       config config:get config:set config:unset
@@ -18,7 +17,6 @@ RSpec.describe "wokku --help" do
       redeploy
       releases rollback
       run
-      storage storage:mount storage:unmount
       templates
       version
     ]

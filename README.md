@@ -28,7 +28,7 @@ wokku logs myapp -f
 
 ## Commands
 
-Run `wokku --help` for the full list. ~39 first-class commands today, grouped:
+Run `wokku --help` for the full list. ~30 first-class commands today, grouped:
 
 - **Apps:** `apps`, `apps:create`, `apps:destroy`, `apps:info`, `apps:transfer`
 - **Process:** `ps`, `ps:start/stop/restart/scale/rebuild`, `redeploy`
@@ -39,13 +39,7 @@ Run `wokku --help` for the full list. ~39 first-class commands today, grouped:
 - **Servers:** `servers`, `servers:info`, `servers:default` (multi-Dokku-host installs)
 - **Teams:** `teams`, `teams:members`, `teams:invite`, `teams:remove`
 - **Logs:** `wokku logs APP --follow [--tail N]`
-- **Run / passthrough:** `wokku run APP -- COMMAND` (one-off in a fresh container), `wokku do APP -- DOKKU_ARGS` (arbitrary `dokku` CLI passthrough)
-
-### Parity with Dokku
-
-`wokku do` is the bridge for the ~110 Dokku subcommands not yet first-classed here. Anything `dokku <something> APP` does, `wokku do APP -- <something>` does too — same exit code, same stdout.
-
-If you find yourself running the same `wokku do` invocation repeatedly, open an issue — that's the queue for promoting commands to first-class status.
+- **Run:** `wokku run APP -- COMMAND` (one-off in a fresh container)
 
 ## Global flags
 
