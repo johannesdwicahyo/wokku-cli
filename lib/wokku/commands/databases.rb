@@ -81,3 +81,13 @@ register "databases:unlink", "Unlink a database from an app (usage: wokku databa
   api(:post, "/databases/#{db_name}/unlink", { app_id: app })
   Wokku::Output.status "Unlinked '#{db_name}' from '#{app}'."
 end
+
+register "databases:import", "Import a dump — overwrites the database (usage: wokku databases:import DB FILE)" do
+  db = ARGV.shift || abort("Usage: wokku databases:import DB FILE")
+  file = ARGV.shift || abort("Missing FILE (e.g. a pg_dump -Fc dump)")
+  abort "File not found: #{file}" unless File.file?(file)
+  print "Are you sure you want to overwrite #{db} with #{File.basename(file)}? (y/N): "
+  abort "Cancelled." unless $stdin.gets.to_s.strip.downcase == "y"
+  data = api_upload(:post, "/databases/#{db}/import", file)
+  Wokku::Output.status(data.is_a?(Hash) && data["message"] ? data["message"] : "Imported.")
+end

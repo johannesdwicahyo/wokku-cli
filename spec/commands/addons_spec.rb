@@ -20,18 +20,20 @@ RSpec.describe "addons commands" do
     path: "/apps/5/addons",
     fake_response: [{ "name" => "pg-1", "service_type" => "postgres", "status" => "ok" }]
 
-  describe "addons:add" do
-    it "POSTs with service_type" do
-      fake.stub(:post, "/apps/5/addons", returns: { "name" => "pg-1" })
-      result = CliRunner.run("addons:add", "5", "postgres", api: fake)
+  describe "addons:remove" do
+    it "asks, then DELETEs the add-on" do
+      fake.stub(:delete, "/apps/a/addons/x1", returns: {})
+      result = CliRunner.run("addons:remove", "a", "x1", api: fake, stdin: "y\n")
       expect(result.exit_code).to eq(0)
-      expect(fake.calls.first.body).to eq(service_type: "postgres")
+      expect(fake.calls.last.method).to eq(:delete)
     end
+  end
 
-    it "passes --name when given" do
-      fake.stub(:post, "/apps/5/addons", returns: { "name" => "custom" })
-      CliRunner.run("addons:add", "5", "postgres", "--name", "custom", api: fake)
-      expect(fake.calls.first.body).to eq(service_type: "postgres", name: "custom")
+  describe "addons:add" do
+    it "is retired and points at the replacements without calling the API" do
+      result = CliRunner.run("addons:add", "a", "postgres", api: fake)
+      expect(result.stderr + result.stdout).to include("addons:shared:enable")
+      expect(fake.calls).to be_empty
     end
   end
 

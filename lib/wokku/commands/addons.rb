@@ -20,17 +20,9 @@ register "addons", "List add-ons (usage: wokku addons APP)" do
   end
 end
 
-register "addons:add", "[LEGACY pre-Bundle-v2] Add add-on (usage: wokku addons:add APP postgres). Returns 410 under Bundle v2 — use addons:shared:enable or addons:dedicated:upgrade instead." do
-  id = ARGV.shift || abort("Usage: wokku addons:add APP SERVICE_TYPE")
-  service_type = ARGV.shift || abort("Missing service type (postgres, redis, mysql, etc)")
-  name = nil
-  while (arg = ARGV.shift)
-    name = ARGV.shift if arg == "--name"
-  end
-  body = { service_type: service_type }
-  body[:name] = name if name
-  data = api(:post, "/apps/#{id}/addons", body)
-  Wokku::Output.status "Added #{service_type}: #{data['name'] || data['id']}"
+register "addons:add", "Retired — use addons:shared:enable or addons:dedicated:upgrade" do
+  ARGV.clear
+  abort "addons:add is retired — use addons:shared:enable APP ENGINE (free) or addons:dedicated:upgrade APP ENGINE"
 end
 
 # --- Bundle v2 — shared engines ---
@@ -77,4 +69,13 @@ register "addons:dedicated:upgrade", "Upgrade a box to a dedicated DB or Redis (
   engine = ARGV.shift || abort("Missing engine (postgres|mysql|mongodb|redis)")
   data   = api(:post, "/apps/#{id}/addons/dedicated", { engine: engine })
   Wokku::Output.status(data["message"] || "Dedicated #{engine} upgrade queued for #{id}")
+end
+
+register "addons:remove", "Remove an add-on from an app (usage: wokku addons:remove APP ADDON_ID)" do
+  id = ARGV.shift || abort("Usage: wokku addons:remove APP ADDON_ID")
+  addon = ARGV.shift || abort("Missing ADDON_ID (see: wokku addons #{id})")
+  print "Are you sure you want to remove add-on #{addon} from #{id}? (y/N): "
+  abort "Cancelled." unless $stdin.gets.to_s.strip.downcase == "y"
+  api(:delete, "/apps/#{id}/addons/#{addon}")
+  Wokku::Output.status "Add-on removed."
 end

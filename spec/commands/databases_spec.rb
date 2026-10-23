@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "tempfile"
+
 RSpec.describe "databases commands" do
   let(:fake) { FakeApiClient.new }
 
@@ -143,6 +145,28 @@ RSpec.describe "databases commands" do
     it "aborts when APP is missing" do
       result = CliRunner.run("databases:unlink", "mypg", api: fake)
       expect(result.exit_code).not_to eq(0)
+    end
+  end
+
+  describe "databases:import" do
+    it "asks, then uploads the dump as a raw body" do
+      Tempfile.create("x.dump") do |f|
+        fake.stub(:post, "/databases/db1/import", returns: { "message" => "imported", "database" => "db1" })
+        result = CliRunner.run("databases:import", "db1", f.path, api: fake, stdin: "y\n")
+        expect(result.exit_code).to eq(0)
+        expect(fake.calls.last.body).to eq(file: f.path)
+      end
+    end
+
+    it "cancels without y" do
+      Tempfile.create("x.dump") do |f|
+        expect(CliRunner.run("databases:import", "db1", f.path, api: fake, stdin: "\n").exit_code).not_to eq(0)
+        expect(fake.calls).to be_empty
+      end
+    end
+
+    it "aborts on a missing file" do
+      expect(CliRunner.run("databases:import", "db1", "/nope.dump", api: fake, stdin: "y\n").exit_code).not_to eq(0)
     end
   end
 end
