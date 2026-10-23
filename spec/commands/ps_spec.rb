@@ -59,4 +59,42 @@ RSpec.describe "process commands" do
     path: "/apps/5/restart",
     api_method: :post,
     fake_response: {}
+
+  describe "ps" do
+    it "GETs the process formation" do
+      fake.stub(:get, "/apps/a/ps", returns: { "web" => 1, "worker" => 0 })
+      result = CliRunner.run("ps", "a", api: fake)
+      expect(result.exit_code).to eq(0)
+      expect(result.stdout).to include("web")
+    end
+  end
+
+  describe "ps:sizes" do
+    it "lists box sizes" do
+      fake.stub(:get, "/dyno_tiers", returns: [ { "name" => "standard", "memory_mb" => 1024 } ])
+      expect(CliRunner.run("ps:sizes", api: fake).stdout).to include("standard")
+    end
+  end
+
+  describe "ps:dynos" do
+    it "lists allocations" do
+      fake.stub(:get, "/apps/a/dynos", returns: [ { "id" => "y1", "process_type" => "web", "count" => 1, "size_label" => "Starter", "monthly_cost_cents" => 2400 } ])
+      expect(CliRunner.run("ps:dynos", "a", api: fake).stdout).to include("Starter")
+    end
+  end
+
+  describe "ps:resize" do
+    it "PATCHes the allocation for the given process type" do
+      fake.stub(:get, "/apps/a/dynos", returns: [ { "id" => "y1", "process_type" => "web" }, { "id" => "y2", "process_type" => "worker" } ])
+      fake.stub(:patch, "/apps/a/dynos/y2", returns: { "tier" => "standard" })
+      result = CliRunner.run("ps:resize", "a", "standard", "--type", "worker", api: fake)
+      expect(result.exit_code).to eq(0)
+      expect(fake.calls.last.body).to eq(dyno_tier_name: "standard")
+    end
+
+    it "aborts when the process type has no allocation" do
+      fake.stub(:get, "/apps/a/dynos", returns: [ { "id" => "y1", "process_type" => "web" } ])
+      expect(CliRunner.run("ps:resize", "a", "standard", "--type", "clock", api: fake).exit_code).not_to eq(0)
+    end
+  end
 end

@@ -28,4 +28,11 @@ RSpec.describe "releases and rollback" do
       expect(result.stdout).to include("Rolling back")
     end
   end
+
+  describe "releases:info" do
+    it "GETs one release" do
+      fake.stub(:get, "/apps/a/releases/r1", returns: { "version" => 7, "description" => "Deploy abc" })
+      expect(CliRunner.run("releases:info", "a", "r1", api: fake).stdout).to include("Deploy abc")
+    end
+  end
 end
