@@ -58,4 +58,4 @@ jobs:
         with:
           ruby-version: 3.4.3
       - run: ruby script/openapi_coverage.rb --self-test
-      - run: ruby script/openapi_coverage.rb https://wokku.cloud/api/v1/openapi.yaml "lib/**/*.rb"
+      - run: ruby script/openapi_coverage.rb https://wokku.cloud/api/v1/openapi.yaml "lib/**/*.rb" --gate
