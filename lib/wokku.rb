@@ -80,6 +80,15 @@ rescue Wokku::ApiClient::NotAuthenticated, Wokku::ApiClient::Timeout,
   abort e.message
 end
 
+def api_upload(method, path, file_path)
+  abort "uploads are POST only" unless method == :post
+  abort "File not found: #{file_path}" unless File.file?(file_path.to_s)
+  Wokku.api_client.upload(path, file_path)
+rescue Wokku::ApiClient::NotAuthenticated, Wokku::ApiClient::Timeout,
+       Wokku::ApiClient::Unreachable, Wokku::ApiClient::Error => e
+  abort e.message
+end
+
 # Poll GET <path> until the block returns truthy (returns that data) or the
 # attempt budget is exhausted (returns nil). interval is injectable so specs
 # can run with no real sleep.

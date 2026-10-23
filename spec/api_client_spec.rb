@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "tempfile"
+
 RSpec.describe Wokku::ApiClient do
   let(:client) { described_class.new(url: "https://example.test/api/v1", token: "tk_test") }
 
@@ -80,6 +82,21 @@ RSpec.describe Wokku::ApiClient do
       expect {
         client.stream(:get, "/apps/5/logs?follow=1") { |_| raise Interrupt }
       }.not_to raise_error
+    end
+  end
+
+  describe "#upload" do
+    it "POSTs the file as a raw octet-stream body with auth" do
+      Tempfile.create("dump") do |f|
+        f.binmode
+        f.write("PGDMP\x00raw")
+        f.flush
+        stub = stub_request(:post, "https://example.test/api/v1/databases/d/import")
+          .with(headers: { "Authorization" => "Bearer tk_test", "Content-Type" => "application/octet-stream" }, body: "PGDMP\x00raw".b)
+          .to_return(status: 200, body: '{"message":"ok"}')
+        expect(client.upload("/databases/d/import", f.path)).to eq("message" => "ok")
+        expect(stub).to have_been_requested
+      end
     end
   end
 end

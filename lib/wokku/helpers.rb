@@ -34,3 +34,31 @@ def resolve_server(explicit: nil)
   names = servers.map { |s| s["name"] }.join(", ")
   abort "Multiple servers available (#{names}). Pass --server NAME or set a default: wokku servers:default NAME"
 end
+
+# PUT a file to a presigned bucket URL. No Authorization header: the
+# signature in the URL is the credential and an extra header breaks it.
+def upload_presigned(url, file_path)
+  uri = URI(url)
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.use_ssl = uri.scheme == "https"
+  http.read_timeout = 300
+  req = Net::HTTP::Put.new(uri)
+  req["Content-Type"] = "application/gzip"
+  req.body = File.binread(file_path)
+  resp = http.request(req)
+  abort "Upload failed: HTTP #{resp.code}" unless resp.is_a?(Net::HTTPSuccess)
+  true
+end
+
+# .tar.gz of dir: committed files only for git repos, otherwise everything
+# except .git/node_modules/tmp/log. COPYFILE_DISABLE stops macOS tar from
+# adding ._ AppleDouble files that break builds.
+def build_tarball(dir, archive_path)
+  ok = if Dir.exist?(File.join(dir, ".git"))
+    system("git", "-C", dir, "archive", "--format=tar.gz", "--output=#{archive_path}", "HEAD")
+  else
+    system({ "COPYFILE_DISABLE" => "1" }, "tar", "-czf", archive_path,
+      "--exclude=.git", "--exclude=node_modules", "--exclude=tmp", "--exclude=log", "-C", dir, ".")
+  end
+  abort "Could not archive #{dir}" unless ok
+end

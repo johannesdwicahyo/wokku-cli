@@ -47,6 +47,28 @@ module Wokku
       parse_response(resp)
     end
 
+    # Raw-body POST (databases.import). Streams the file — dumps can be GBs.
+    def upload(path, file_path)
+      @last_path = path
+      raise NotAuthenticated, "Not logged in. Run: wokku auth:login" unless token
+
+      uri = URI("#{url}#{path}")
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = uri.scheme == "https"
+      http.open_timeout = OPEN_TIMEOUT
+      http.read_timeout = 900
+
+      req = Net::HTTP::Post.new(uri)
+      req["Authorization"] = "Bearer #{token}"
+      req["Content-Type"] = "application/octet-stream"
+      req["User-Agent"] = @user_agent
+      File.open(file_path, "rb") do |f|
+        req["Content-Length"] = f.size.to_s
+        req.body_stream = f
+        parse_response(perform(http, req, uri))
+      end
+    end
+
     def stream(method, path, &block)
       @last_path = path
       raise NotAuthenticated, "Not logged in. Run: wokku auth:login" unless token

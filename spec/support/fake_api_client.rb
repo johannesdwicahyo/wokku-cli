@@ -31,6 +31,14 @@ class FakeApiClient
     end
   end
 
+  def upload(path, file_path)
+    @calls << Call.new(method: :post, path: path, body: { file: file_path })
+    stub = @stubs[[:post, path]]
+    raise Wokku::ApiClient::Error, "No stub for upload POST #{path}" unless stub
+    raise stub[:raises] if stub[:raises]
+    stub[:returns]
+  end
+
   def request(method, path, body = nil)
     @calls << Call.new(method: method, path: path, body: body)
     stub = @stubs[[method, path]]
