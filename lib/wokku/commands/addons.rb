@@ -74,7 +74,7 @@ end
 register "addons:remove", "Remove an add-on from an app (usage: wokku addons:remove APP ADDON_ID)" do
   id = ARGV.shift || abort("Usage: wokku addons:remove APP ADDON_ID")
   addon = ARGV.shift || abort("Missing ADDON_ID (see: wokku addons #{id})")
-  print "Are you sure you want to remove add-on #{addon} from #{id}? (y/N): "
+  print "Are you sure you want to remove add-on #{addon} from #{id}? This destroys the database (a farewell snapshot is taken). (y/N): "
   abort "Cancelled." unless $stdin.gets.to_s.strip.downcase == "y"
   api(:delete, "/apps/#{id}/addons/#{addon}")
   Wokku::Output.status "Add-on removed."

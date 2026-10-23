@@ -40,6 +40,6 @@ register "backups:restore", "Restore a backup — overwrites the database (usage
   backup_id = ARGV.shift || abort("Missing BACKUP_ID")
   print "Are you sure you want to overwrite #{db} with backup #{backup_id}? (y/N): "
   abort "Cancelled." unless $stdin.gets.to_s.strip.downcase == "y"
-  api(:post, "/databases/#{db}/backups/#{backup_id}/restore")
-  Wokku::Output.status "Restore started."
+  data = api(:post, "/databases/#{db}/backups/#{backup_id}/restore")
+  Wokku::Output.status((data.is_a?(Hash) && data["message"]) || "Restore requested.")
 end

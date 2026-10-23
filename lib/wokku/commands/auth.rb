@@ -14,7 +14,8 @@ register "auth:logout", "Log out (revokes this token on the server)" do
   if File.exist?(path)
     begin
       # covers: api(:delete, "/auth/logout")
-      Wokku.api_client.request(:delete, "/auth/logout")
+      # only revoke a token this file holds, never an env-provided (CI) one
+      Wokku.api_client.request(:delete, "/auth/logout") if Wokku::Config.load["token"]
     rescue Wokku::ApiClient::NotAuthenticated, Wokku::ApiClient::Timeout,
            Wokku::ApiClient::Unreachable, Wokku::ApiClient::Error
       nil # best effort: always clear the local login

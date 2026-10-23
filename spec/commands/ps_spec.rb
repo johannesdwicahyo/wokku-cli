@@ -62,10 +62,10 @@ RSpec.describe "process commands" do
 
   describe "ps" do
     it "GETs the process formation" do
-      fake.stub(:get, "/apps/a/ps", returns: { "web" => 1, "worker" => 0 })
+      fake.stub(:get, "/apps/a/ps", returns: { "processes" => { "status_web_1" => "running" } })
       result = CliRunner.run("ps", "a", api: fake)
       expect(result.exit_code).to eq(0)
-      expect(result.stdout).to include("web")
+      expect(result.stdout).to include("status_web_1: running")
     end
   end
 
@@ -84,17 +84,28 @@ RSpec.describe "process commands" do
   end
 
   describe "ps:resize" do
-    it "PATCHes the allocation for the given process type" do
-      fake.stub(:get, "/apps/a/dynos", returns: [ { "id" => "y1", "process_type" => "web" }, { "id" => "y2", "process_type" => "worker" } ])
-      fake.stub(:patch, "/apps/a/dynos/y2", returns: { "tier" => "standard" })
-      result = CliRunner.run("ps:resize", "a", "standard", "--type", "worker", api: fake)
+    it "PATCHes the resources shape for the process type" do
+      fake.stub(:patch, "/apps/a/ps", returns: { "message" => "Resources updated" })
+      result = CliRunner.run("ps:resize", "a", "worker", "--memory", "1024", "--cpu", "0.5", api: fake)
       expect(result.exit_code).to eq(0)
-      expect(fake.calls.last.body).to eq(dyno_tier_name: "standard")
+      expect(fake.calls.last.body).to eq(resources: { "worker" => { memory_mb: 1024, cpu: 0.5 } })
     end
 
-    it "aborts when the process type has no allocation" do
-      fake.stub(:get, "/apps/a/dynos", returns: [ { "id" => "y1", "process_type" => "web" } ])
-      expect(CliRunner.run("ps:resize", "a", "standard", "--type", "clock", api: fake).exit_code).not_to eq(0)
+    it "accepts flags before nothing else in any order" do
+      fake.stub(:patch, "/apps/a/ps", returns: {})
+      result = CliRunner.run("ps:resize", "a", "web", "--cpu", "1", "--memory", "512", api: fake)
+      expect(result.exit_code).to eq(0)
+      expect(fake.calls.last.body).to eq(resources: { "web" => { cpu: 1.0, memory_mb: 512 } })
+    end
+
+    it "aborts with neither --memory nor --cpu" do
+      expect(CliRunner.run("ps:resize", "a", "web", api: fake).exit_code).not_to eq(0)
+      expect(fake.calls).to be_empty
+    end
+
+    it "aborts without TYPE" do
+      expect(CliRunner.run("ps:resize", "a", api: fake).exit_code).not_to eq(0)
+      expect(fake.calls).to be_empty
     end
   end
 end

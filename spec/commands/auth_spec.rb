@@ -71,6 +71,21 @@ RSpec.describe "auth commands" do
     end
   end
 
+  describe "auth:logout (env token)" do
+    it "never revokes an env-provided token" do
+      FileUtils.mkdir_p(File.dirname(Wokku::Config.file))
+      File.write(Wokku::Config.file, '{"email":"a@b.com"}')
+      ENV["WOKKU_API_TOKEN"] = "ci_token"
+      begin
+        CliRunner.run("auth:logout", api: fake)
+      ensure
+        ENV.delete("WOKKU_API_TOKEN")
+      end
+      expect(fake.calls).to be_empty
+      expect(File.exist?(Wokku::Config.file)).to be(false)
+    end
+  end
+
   describe "auth:logout (server revoke)" do
     it "revokes the token server-side and still logs out if that fails" do
       fake.stub(:delete, "/auth/logout", raises: Wokku::ApiClient::Error.new("down"))

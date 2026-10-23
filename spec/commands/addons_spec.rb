@@ -29,6 +29,14 @@ RSpec.describe "addons commands" do
     end
   end
 
+  describe "addons:remove (cancel)" do
+    it "aborts without calling the API on anything but y" do
+      result = CliRunner.run("addons:remove", "a", "x1", api: fake, stdin: "n\n")
+      expect(result.exit_code).not_to eq(0)
+      expect(fake.calls).to be_empty
+    end
+  end
+
   describe "addons:add" do
     it "is retired and points at the replacements without calling the API" do
       result = CliRunner.run("addons:add", "a", "postgres", api: fake)

@@ -48,7 +48,7 @@ end
 register "ps", "Show process formation (usage: wokku ps APP)" do
   id = ARGV.shift || abort("Usage: wokku ps APP")
   data = api(:get, "/apps/#{id}/ps")
-  Wokku::Output.render(data) { |d| d.is_a?(Hash) ? d.each { |k, v| puts "#{k}: #{v}" } : puts_json(d) }
+  Wokku::Output.render(data) { |d| d.is_a?(Hash) && d["processes"].is_a?(Hash) ? d["processes"].each { |k, v| puts "#{k}: #{v}" } : puts_json(d) }
 end
 
 register "ps:sizes", "List box sizes (usage: wokku ps:sizes)" do
@@ -65,17 +65,20 @@ register "ps:dynos", "Show process allocations and box sizes (usage: wokku ps:dy
   end
 end
 
-register "ps:resize", "Change box size (usage: wokku ps:resize APP SIZE [--type web])" do
-  id = ARGV.shift || abort("Usage: wokku ps:resize APP SIZE [--type TYPE]")
-  size = ARGV.shift || abort("Missing SIZE (see: wokku ps:sizes)")
-  type = "web"
-  if (i = ARGV.index("--type"))
-    type = ARGV[i + 1] || abort("Missing value for --type")
+register "ps:resize", "Change a process type's size (usage: wokku ps:resize APP TYPE --memory MB [--cpu N])" do
+  usage = "Usage: wokku ps:resize APP TYPE --memory MB [--cpu N]"
+  shape = {}
+  if (i = ARGV.index("--memory"))
+    shape[:memory_mb] = Integer(ARGV[i + 1] || abort("Missing value for --memory"))
     ARGV.slice!(i, 2)
   end
-  dynos = api(:get, "/apps/#{id}/dynos")
-  dyno = Array(dynos).find { |a| a["process_type"] == type }
-  abort "No #{type} allocation on #{id} (see: wokku ps:dynos #{id})" unless dyno
-  api(:patch, "/apps/#{id}/dynos/#{dyno['id']}", { dyno_tier_name: size })
-  Wokku::Output.status "Resizing #{type} to #{size}; applied in the background."
+  if (i = ARGV.index("--cpu"))
+    shape[:cpu] = Float(ARGV[i + 1] || abort("Missing value for --cpu"))
+    ARGV.slice!(i, 2)
+  end
+  id = ARGV.shift || abort(usage)
+  type = ARGV.shift || abort(usage)
+  abort "#{usage} (give --memory and/or --cpu; see: wokku ps:sizes)" if shape.empty?
+  api(:patch, "/apps/#{id}/ps", { resources: { type => shape } })
+  Wokku::Output.status "Resizing #{type}: #{shape.map { |k, v| "#{k}=#{v}" }.join(' ')}; applied in the background."
 end

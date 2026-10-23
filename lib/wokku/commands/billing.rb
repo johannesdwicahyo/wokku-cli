@@ -11,5 +11,5 @@ register "billing:plan", "Show your current Wokku plan + limits (usage: wokku bi
 end
 
 register "billing:usage", "Retired — usage is now per resource (see billing:plan)" do
-  Wokku::Output.status "billing:usage is retired — usage is now per resource; see wokku billing:plan or the dashboard."
+  abort "billing:usage is retired — usage is now per resource; see wokku billing:plan or the dashboard"
 end

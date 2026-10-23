@@ -34,6 +34,7 @@ RSpec.describe "backups commands" do
     fake.stub(:post, "/databases/db1/backups/b1/restore", returns: { "message" => "restoring" })
     result = CliRunner.run("backups:restore", "db1", "b1", api: fake, stdin: "y\n")
     expect(result.exit_code).to eq(0)
+    expect(result.stdout).to include("restoring")
     expect(fake.calls.last.path).to eq("/databases/db1/backups/b1/restore")
   end
 

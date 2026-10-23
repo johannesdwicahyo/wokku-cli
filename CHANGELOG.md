@@ -4,10 +4,10 @@
 
 Full API parity for everything customers can do (CI now fails if the CLI falls behind the API contract).
 
-- New: `deploys`, `deploys:info`, `deploy:tarball`, `releases:info`, `ps`, `ps:sizes`, `ps:dynos`, `ps:resize`, `run:status`, `backups`, `backups:capture`, `backups:download`, `backups:restore`, `databases:import`, `addons:remove`, `apps:update`, `tokens`, `tokens:create`, `tokens:revoke`, `doctor`, `ai:diagnose`, `servers:status`, `templates:info`.
+- New: `deploys`, `deploys:info`, `deploy:tarball`, `releases:info`, `ps`, `ps:sizes`, `ps:dynos`, `ps:resize` (usage: `ps:resize APP TYPE --memory MB [--cpu N]`), `run:status`, `backups`, `backups:capture`, `backups:download`, `backups:restore`, `databases:import`, `addons:remove`, `apps:update`, `tokens`, `tokens:create`, `tokens:revoke`, `doctor`, `ai:diagnose`, `servers:status`, `templates:info`.
 - Fixed: `wokku run` now waits for the command and exits with its exit code (it used to return immediately).
 - Fixed: `wokku config` prints `KEY=value` (it printed the response wrapper); viewers see `(hidden — viewer)`.
-- `auth:logout` also revokes the token on the server.
+- `auth:logout` also revokes the token on the server. It also signs out the MCP plugin (they share ~/.wokku/config.json).
 - Retired: `billing:usage` (usage is per resource now; see `billing:plan`) and `addons:add` (use `addons:shared:enable` / `addons:dedicated:upgrade`).
 
 ## 0.6.0 — 2026-07-30

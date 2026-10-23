@@ -10,6 +10,7 @@ RSpec.describe "run commands" do
       result = CliRunner.run("run", "a", "--", "rake", "x", api: fake)
       expect(fake.calls.first.body).to eq(command: "rake x")
       expect(result.stdout).to include("boom")
+      expect(result.stderr).to include("Run r1 started")
       expect(result.exit_code).to eq(3)
     end
 

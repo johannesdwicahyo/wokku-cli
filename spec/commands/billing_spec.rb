@@ -19,7 +19,8 @@ RSpec.describe "billing commands" do
   describe "billing:usage" do
     it "is retired and does not call the API" do
       result = CliRunner.run("billing:usage", api: fake)
-      expect(result.stdout + result.stderr).to include("retired")
+      expect(result.exit_code).not_to eq(0)
+      expect(result.stderr).to include("retired")
       expect(fake.calls).to be_empty
     end
   end

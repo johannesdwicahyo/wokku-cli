@@ -30,6 +30,13 @@ RSpec.describe "config commands" do
   end
 
   describe "config:get" do
+    it "aborts when values are masked for viewers" do
+      fake.stub(:get, "/apps/5/config", returns: { "config" => { "A" => nil }, "masked" => true })
+      result = CliRunner.run("config:get", "5", "A", api: fake)
+      expect(result.exit_code).not_to eq(0)
+      expect(result.stderr).to include("hidden for viewers")
+    end
+
     it "prints the value when set" do
       fake.stub(:get, "/apps/5/config", returns: { "FOO" => "bar" })
       result = CliRunner.run("config:get", "5", "FOO", api: fake)
@@ -69,6 +76,13 @@ RSpec.describe "config commands" do
   end
 
   describe "config:export" do
+    it "aborts when values are masked for viewers" do
+      fake.stub(:get, "/apps/5/config", returns: { "config" => { "A" => nil }, "masked" => true })
+      result = CliRunner.run("config:export", "5", api: fake)
+      expect(result.exit_code).not_to eq(0)
+      expect(result.stdout).not_to include("A=")
+    end
+
     it "prints KEY=\"value\" lines" do
       fake.stub(:get, "/apps/5/config", returns: { "FOO" => "bar", "PORT" => "3000" })
       result = CliRunner.run("config:export", "5", api: fake)

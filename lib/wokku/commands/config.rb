@@ -33,6 +33,7 @@ register "config:get", "Show one config var (usage: wokku config:get APP KEY)" d
   key = ARGV.shift || abort("Missing KEY")
   data = api(:get, "/apps/#{id}/config")
   vars = data.is_a?(Hash) ? (data["config"] || data) : {}
+  abort "Values are hidden for viewers — ask a team member or admin." if data.is_a?(Hash) && data["masked"]
   abort "Key not set: #{key}" unless vars.key?(key)
   Wokku::Output.render({ "key" => key, "value" => vars[key] }) { |_| puts vars[key] }
 end
@@ -40,6 +41,7 @@ end
 register "config:export", "Export config as .env (usage: wokku config:export APP)" do
   id = ARGV.shift || abort("Usage: wokku config:export APP")
   data = api(:get, "/apps/#{id}/config")
+  abort "Values are hidden for viewers — ask a team member or admin." if data.is_a?(Hash) && data["masked"]
   vars = data.is_a?(Hash) ? (data["config"] || data) : {}
   Wokku::Output.render(vars) do |d|
     d.each do |k, v|
