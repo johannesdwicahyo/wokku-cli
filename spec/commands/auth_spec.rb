@@ -57,7 +57,8 @@ RSpec.describe "auth commands" do
   describe "auth:logout" do
     it "deletes the config file when present" do
       Wokku::Config.save("token" => "tk_xyz", "email" => "a@b.com")
-      result = CliRunner.run("auth:logout")
+      fake.stub(:delete, "/auth/logout", returns: {})
+      result = CliRunner.run("auth:logout", api: fake)
       expect(result.exit_code).to eq(0)
       expect(result.stdout).to include("Logged out")
       expect(File.exist?(Wokku::Config.file)).to be(false)
@@ -67,6 +68,18 @@ RSpec.describe "auth commands" do
       File.delete(Wokku::Config.file) if File.exist?(Wokku::Config.file)
       result = CliRunner.run("auth:logout")
       expect(result.stdout).to include("Not logged in")
+    end
+  end
+
+  describe "auth:logout (server revoke)" do
+    it "revokes the token server-side and still logs out if that fails" do
+      fake.stub(:delete, "/auth/logout", raises: Wokku::ApiClient::Error.new("down"))
+      FileUtils.mkdir_p(File.dirname(Wokku::Config.file))
+      File.write(Wokku::Config.file, '{"token":"t"}')
+      result = CliRunner.run("auth:logout", api: fake)
+      expect(fake.calls.map(&:path)).to eq([ "/auth/logout" ])
+      expect(File.exist?(Wokku::Config.file)).to be(false)
+      expect(result.stdout).to include("Logged out.")
     end
   end
 end

@@ -5,11 +5,9 @@ register "config", "Show config vars (usage: wokku config APP)" do
   id = ARGV.shift || abort("Usage: wokku config APP")
   data = api(:get, "/apps/#{id}/config")
   Wokku::Output.render(data) do |d|
-    if d.is_a?(Hash)
-      d.each { |k, v| puts "#{k}=#{v}" }
-    else
-      puts_json d
-    end
+    next puts_json(d) unless d.is_a?(Hash)
+    vars = d["config"] || d
+    vars.each { |k, v| puts(d["masked"] && v.nil? ? "#{k}=(hidden — viewer)" : "#{k}=#{v}") }
   end
 end
 

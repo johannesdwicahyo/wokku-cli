@@ -51,4 +51,11 @@ RSpec.describe "templates and deploy" do
       expect(result.exit_code).not_to eq(0)
     end
   end
+
+  describe "templates:info" do
+    it "GETs one template" do
+      fake.stub(:get, "/templates/n8n", returns: { "slug" => "n8n", "description" => "Workflow automation" })
+      expect(CliRunner.run("templates:info", "n8n", api: fake).stdout).to include("Workflow automation")
+    end
+  end
 end

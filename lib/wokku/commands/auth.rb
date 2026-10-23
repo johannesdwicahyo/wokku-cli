@@ -9,9 +9,16 @@ register "auth:login", "Authenticate with Wokku via browser device flow" do
   Wokku::Auth.login_with_device_flow!(Wokku::Config.api_url)
 end
 
-register "auth:logout", "Log out" do
+register "auth:logout", "Log out (revokes this token on the server)" do
   path = Wokku::Config.file
   if File.exist?(path)
+    begin
+      # covers: api(:delete, "/auth/logout")
+      Wokku.api_client.request(:delete, "/auth/logout")
+    rescue Wokku::ApiClient::NotAuthenticated, Wokku::ApiClient::Timeout,
+           Wokku::ApiClient::Unreachable, Wokku::ApiClient::Error
+      nil # best effort: always clear the local login
+    end
     File.delete(path)
     Wokku::Output.status "Logged out."
   else

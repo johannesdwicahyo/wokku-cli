@@ -100,4 +100,17 @@ RSpec.describe "apps commands" do
       expect(fake.calls).to be_empty
     end
   end
+
+  describe "apps:update" do
+    it "PATCHes only the given fields" do
+      fake.stub(:patch, "/apps/a", returns: { "name" => "a", "deploy_branch" => "prod" })
+      result = CliRunner.run("apps:update", "a", "--branch", "prod", api: fake)
+      expect(result.exit_code).to eq(0)
+      expect(fake.calls.last.body).to eq(deploy_branch: "prod")
+    end
+
+    it "aborts with no fields" do
+      expect(CliRunner.run("apps:update", "a", api: fake).exit_code).not_to eq(0)
+    end
+  end
 end

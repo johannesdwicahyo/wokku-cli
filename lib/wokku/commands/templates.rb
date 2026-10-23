@@ -29,3 +29,9 @@ register "deploy", "Deploy template (usage: wokku deploy TEMPLATE [--server SERV
   Wokku::Output.status "Deploying #{slug}..."
   Wokku::Output.render(data) { |d| puts_json d }
 end
+
+register "templates:info", "Show a template (usage: wokku templates:info SLUG)" do
+  slug = ARGV.shift || abort("Usage: wokku templates:info SLUG")
+  data = api(:get, "/templates/#{slug}")
+  Wokku::Output.render(data) { |d| puts_json d }
+end

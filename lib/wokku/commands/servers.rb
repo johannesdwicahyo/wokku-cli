@@ -32,3 +32,9 @@ register "servers:default", "Set the default server (usage: wokku servers:defaul
     Wokku::Output.status "Default server set to: #{arg}"
   end
 end
+
+register "servers:status", "Show server health (usage: wokku servers:status SERVER)" do
+  server = ARGV.shift || abort("Usage: wokku servers:status SERVER")
+  data = api(:get, "/servers/#{server}/status")
+  Wokku::Output.render(data) { |d| puts_json d }
+end

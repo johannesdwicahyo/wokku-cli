@@ -51,3 +51,16 @@ register "apps:destroy", "Delete app (usage: wokku apps:destroy APP)" do
   api(:delete, "/apps/#{id}")
   Wokku::Output.status "App deleted."
 end
+
+register "apps:update", "Update app settings (usage: wokku apps:update APP [--branch BRANCH] [--name NAME])" do
+  id = ARGV.shift || abort("Usage: wokku apps:update APP [--branch BRANCH] [--name NAME]")
+  body = {}
+  { "--branch" => :deploy_branch, "--name" => :name }.each do |flag, key|
+    next unless (i = ARGV.index(flag))
+    body[key] = ARGV[i + 1] || abort("Missing value for #{flag}")
+    ARGV.slice!(i, 2)
+  end
+  abort "Nothing to update. Pass --branch and/or --name." if body.empty?
+  api(:patch, "/apps/#{id}", body)
+  Wokku::Output.status "App updated."
+end

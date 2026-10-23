@@ -70,4 +70,11 @@ RSpec.describe "servers commands" do
       expect(result.exit_code).not_to eq(0)
     end
   end
+
+  describe "servers:status" do
+    it "GETs server health" do
+      fake.stub(:get, "/servers/jkt-01/status", returns: { "cpu" => 12, "memory" => 40 })
+      expect(CliRunner.run("servers:status", "jkt-01", api: fake).stdout).to include("cpu")
+    end
+  end
 end

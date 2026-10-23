@@ -95,4 +95,18 @@ RSpec.describe "config commands" do
       path: "/apps/5/config",
       fake_response: { "FOO" => "bar" }
   end
+
+  describe "config (response shape)" do
+    it "prints KEY=value from the config object, not the wrapper" do
+      fake.stub(:get, "/apps/a/config", returns: { "config" => { "A" => "1" }, "masked" => false })
+      result = CliRunner.run("config", "a", api: fake)
+      expect(result.stdout).to include("A=1")
+      expect(result.stdout).not_to include("config=")
+    end
+
+    it "marks values hidden for viewers" do
+      fake.stub(:get, "/apps/a/config", returns: { "config" => { "SECRET" => nil }, "masked" => true })
+      expect(CliRunner.run("config", "a", api: fake).stdout).to include("SECRET=(hidden — viewer)")
+    end
+  end
 end
