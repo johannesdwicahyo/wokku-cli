@@ -24,6 +24,16 @@ RSpec.describe "incidents and alert commands" do
     expect(CliRunner.run("alerts:mutes", api: fake).stdout).to include("web")
   end
 
+  it "alerts:mutes labels a permanent mute and shows a timestamp for a timed one" do
+    fake.stub(:get, "/alert_mutes", returns: [
+      { "id" => "m1", "app_name" => "web", "event" => nil, "until" => nil },
+      { "id" => "m2", "app_name" => "api", "event" => nil, "until" => "2030-01-01T10:00:00Z" }
+    ])
+    out = CliRunner.run("alerts:mutes", api: fake).stdout
+    expect(out).to include("(until unmuted)")
+    expect(out).to include("2030-01-01T10:00:00")
+  end
+
   it "alerts:mute --app --event --for posts an expiry" do
     fake.stub(:post, "/alert_mutes", returns: { "id" => "m2" })
     CliRunner.run("alerts:mute", "--app", "web", "--event", "app_down", "--for", "8h", api: fake)

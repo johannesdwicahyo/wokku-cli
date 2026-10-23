@@ -40,7 +40,7 @@ register "alerts:mutes", "List your push alert mutes (usage: wokku alerts:mutes)
   Wokku::Output.render(data) do |d|
     next puts_json(d) unless d.is_a?(Array)
     next puts("No mutes.") if d.empty?
-    table(d.map { |m| { "id" => m["id"], "app" => m["app_name"] || "(all apps)", "event" => m["event"] || "(all events)", "until" => m["until"].to_s[0..18].then { |u| u.empty? ? "removed" : u } } })
+    table(d.map { |m| { "id" => m["id"], "app" => m["app_name"] || "(all apps)", "event" => m["event"] || "(all events)", "until" => m["until"].to_s[0..18].then { |u| u.empty? ? "(until unmuted)" : u } } })
   end
 end
 
