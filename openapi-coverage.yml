@@ -9,7 +9,4 @@ ignore:
   - { id: devices.delete, reason: iOS push registration }
   - { id: meta.show, reason: client-internal metadata }
   - { id: auth.login, reason: password login; the CLI uses the device flow }
-  - { id: servers.dokku, reason: retired 410 raw passthrough (contract lacks deprecated flag) }
-  - { id: dynos.update, reason: always 422 in per-resource mode (production + self-host default); resize via ps.update resources }
-  - { id: dynos.replace, reason: always 422 in per-resource mode (production + self-host default); resize via ps.update resources }
   - { id: tunnel_authorize.create, reason: server-to-server hook called by the tunnel server }

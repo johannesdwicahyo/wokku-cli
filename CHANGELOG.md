@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.0 — 2026-10-23
+
+- `incidents [--all] [--app APP]`, `incidents:info ID` — what is down now and recent outages.
+- `alerts:mutes`, `alerts:mute [--app APP] [--event EVENT] [--for 1h|8h|1d]`, `alerts:unmute ID` — per-person push mutes.
+- Coverage gate no longer needs ignores for `dynos.update`/`dynos.replace`/`servers.dokku` (deprecated in the contract).
+
 ## 0.7.0 — 2026-10-23
 
 Full API parity for everything customers can do (CI now fails if the CLI falls behind the API contract).
