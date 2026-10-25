@@ -8,6 +8,7 @@ ignore:
   - { id: devices.create, reason: iOS push registration }
   - { id: devices.delete, reason: iOS push registration }
   - { id: auth.apple, reason: iOS Sign in with Apple }
+  - { id: auth.mobile_token, reason: iOS web sign-in handoff }
   - { id: meta.show, reason: client-internal metadata }
   - { id: auth.login, reason: password login; the CLI uses the device flow }
   - { id: tunnel_authorize.create, reason: server-to-server hook called by the tunnel server }
