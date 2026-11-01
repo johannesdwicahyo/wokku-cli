@@ -48,3 +48,34 @@ register "apps:transfer", "Initiate an app transfer to another user (they accept
   email = data.is_a?(Hash) ? data["recipient_email"] : recipient
   Wokku::Output.status "Transfer requested. #{email} will receive an email."
 end
+
+register "transfers", "List app transfers waiting on you or on someone else (usage: wokku transfers)" do
+  data = api(:get, "/app_transfers")
+  data = {} unless data.is_a?(Hash)
+  incoming = Array(data["incoming"])
+  outgoing = Array(data["outgoing"])
+  if incoming.empty? && outgoing.empty?
+    Wokku::Output.status "no pending transfers"
+    next
+  end
+  incoming.each { |t| Wokku::Output.status "#{t['id']}  incoming  #{t['app_name']}  from #{t['from_email']}  expires #{t['expires_at']}" }
+  outgoing.each { |t| Wokku::Output.status "#{t['id']}  outgoing  #{t['app_name']}  to #{t['to_email']}  expires #{t['expires_at']}" }
+end
+
+register "transfers:accept", "Accept an app transferred to you (usage: wokku transfers:accept TRANSFER_ID)" do
+  id = ARGV.shift || abort("Usage: wokku transfers:accept TRANSFER_ID (find it with `wokku transfers`)")
+  data = api(:post, "/app_transfers/#{id}/accept")
+  Wokku::Output.status "#{data.is_a?(Hash) ? data['app_name'] : 'The app'} is now yours."
+end
+
+register "transfers:decline", "Decline an app transferred to you (usage: wokku transfers:decline TRANSFER_ID)" do
+  id = ARGV.shift || abort("Usage: wokku transfers:decline TRANSFER_ID (find it with `wokku transfers`)")
+  api(:post, "/app_transfers/#{id}/decline")
+  Wokku::Output.status "Transfer declined."
+end
+
+register "transfers:cancel", "Cancel a transfer you started (usage: wokku transfers:cancel TRANSFER_ID)" do
+  id = ARGV.shift || abort("Usage: wokku transfers:cancel TRANSFER_ID (find it with `wokku transfers`)")
+  api(:delete, "/app_transfers/#{id}")
+  Wokku::Output.status "Transfer cancelled."
+end

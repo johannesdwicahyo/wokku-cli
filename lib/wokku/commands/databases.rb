@@ -91,3 +91,24 @@ register "databases:import", "Import a dump — overwrites the database (usage: 
   data = api_upload(:post, "/databases/#{db}/import", file)
   Wokku::Output.status(data.is_a?(Hash) && data["message"] ? data["message"] : "Imported.")
 end
+
+register "databases:resize", "Resize a dedicated database; disk only grows (usage: wokku databases:resize DB --cpu 0.5 --memory 1024 --disk 10)" do
+  id = ARGV.shift || abort("Usage: wokku databases:resize DB --cpu CPU --memory MB --disk GB")
+  body = {}
+  while arg = ARGV.shift
+    case arg
+    when "--cpu"    then body[:cpu] = ARGV.shift
+    when "--memory" then body[:memory_mb] = ARGV.shift.to_i
+    when "--disk"   then body[:disk_gb] = ARGV.shift.to_i
+    end
+  end
+  abort "Pass --cpu, --memory and --disk (see `wokku databases:info #{id}` for the current size)" unless body.size == 3
+  data = api(:patch, "/databases/#{id}/resize", body)
+  Wokku::Output.status((data.is_a?(Hash) && data["message"]) || "Resizing.")
+end
+
+register "databases:retry", "Retry provisioning a database stuck in error (usage: wokku databases:retry DB)" do
+  id = ARGV.shift || abort("Usage: wokku databases:retry DB")
+  data = api(:post, "/databases/#{id}/retry")
+  Wokku::Output.status((data.is_a?(Hash) && data["message"]) || "Retrying.")
+end

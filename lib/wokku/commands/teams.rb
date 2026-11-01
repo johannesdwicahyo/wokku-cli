@@ -57,3 +57,11 @@ register "teams:members:remove", "Remove a member from a team (usage: wokku team
   api(:delete, "/teams/#{team_id}/members/#{membership_id}")
   Wokku::Output.status "Member removed."
 end
+
+register "teams:members:role", "Change a member's role (usage: wokku teams:members:role TEAM_ID MEMBERSHIP_ID viewer|member|admin)" do
+  team_id = ARGV.shift || abort("Usage: wokku teams:members:role TEAM_ID MEMBERSHIP_ID viewer|member|admin")
+  membership_id = ARGV.shift || abort("Missing MEMBERSHIP_ID. Get it from `wokku teams:members TEAM_ID`.")
+  role = ARGV.shift || abort("Missing role: viewer, member or admin")
+  data = api(:patch, "/teams/#{team_id}/members/#{membership_id}", { role: role })
+  Wokku::Output.status "#{data.is_a?(Hash) ? data['email'] : 'Member'} is now #{data.is_a?(Hash) ? data['role'] : role}."
+end

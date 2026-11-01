@@ -47,3 +47,9 @@ register "notifications:remove", "Remove a notification (usage: wokku notificati
   message = data.is_a?(Hash) ? data["message"] : nil
   Wokku::Output.status(message || "Notification removed.")
 end
+
+register "notifications:test", "Send a test message to a notification channel (usage: wokku notifications:test NOTIFICATION_ID)" do
+  id = ARGV.shift || abort("Usage: wokku notifications:test NOTIFICATION_ID")
+  data = api(:post, "/notifications/#{id}/test")
+  Wokku::Output.status((data.is_a?(Hash) && data["message"]) || "Test notification queued.")
+end
