@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.0 — 2026-11-01
+
+- `previews:settings APP [--on|--off] [--database empty|snapshot|shared]` — set up PR previews.
+- `github:repos [OWNER/REPO]` — repos the Wokku GitHub App can see, or a repo's branches, to pick for `github:connect`.
+- `vitals:rotate-token APP` — issue a new web-vitals ingest token.
+
 ## 0.9.0 — 2026-11-01
 
 - `transfers`, `transfers:accept ID`, `transfers:decline ID`, `transfers:cancel ID` — finish an app transfer without the dashboard.
