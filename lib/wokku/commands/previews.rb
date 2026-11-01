@@ -24,3 +24,19 @@ register "previews:destroy", "Queue cleanup of a PR preview (usage: wokku previe
   message = data.is_a?(Hash) ? data["message"] : nil
   Wokku::Output.status(message || "Preview destroy queued.")
 end
+
+register "previews:settings", "Turn PR previews on/off and pick their database (usage: wokku previews:settings APP [--on|--off] [--database empty|snapshot|shared])" do
+  id = ARGV.shift || abort("Usage: wokku previews:settings APP [--on|--off] [--database empty|snapshot|shared]")
+  body = {}
+  while arg = ARGV.shift
+    case arg
+    when "--on"       then body[:preview_enabled] = true
+    when "--off"      then body[:preview_enabled] = false
+    when "--database" then body[:database_strategy] = ARGV.shift || abort("--database needs empty, snapshot or shared")
+    end
+  end
+  abort "Pass --on, --off and/or --database" if body.empty?
+  data = api(:patch, "/apps/#{id}/preview_settings", body)
+  data = {} unless data.is_a?(Hash)
+  Wokku::Output.status "previews: #{data['preview_enabled'] ? 'on' : 'off'}, database: #{data['database_strategy']}"
+end

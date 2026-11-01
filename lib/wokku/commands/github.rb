@@ -23,3 +23,17 @@ register "github:disconnect", "Disconnect the GitHub repo from an app (usage: wo
   message = data.is_a?(Hash) ? data["message"] : nil
   Wokku::Output.status(message || "Disconnected.")
 end
+
+register "github:repos", "List repos the Wokku GitHub App can see, or one repo's branches (usage: wokku github:repos [OWNER/REPO])" do
+  repo = ARGV.shift
+  if repo
+    data = api(:get, "/github/repos?repo=#{URI.encode_www_form_component(repo)}")
+    branches = data.is_a?(Hash) ? Array(data["branches"]) : []
+    branches.empty? ? Wokku::Output.status("no branches") : branches.each { |b| Wokku::Output.status b }
+  else
+    rows = api(:get, "/github/repos")
+    rows = [] unless rows.is_a?(Array)
+    next Wokku::Output.status("no repos — install the Wokku GitHub App on more repositories") if rows.empty?
+    rows.each { |r| Wokku::Output.status "#{r['full_name']}  #{r['private'] ? 'private' : 'public'}  #{r['default_branch']}" }
+  end
+end

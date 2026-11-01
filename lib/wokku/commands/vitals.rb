@@ -21,3 +21,10 @@ register "vitals", "Show p75 per Core Web Vital (usage: wokku vitals APP)" do
     end
   end
 end
+
+register "vitals:rotate-token", "Issue a new web-vitals ingest token; the old one stops working (usage: wokku vitals:rotate-token APP)" do
+  id = ARGV.shift || abort("Usage: wokku vitals:rotate-token APP")
+  data = api(:post, "/apps/#{id}/vitals/rotate_token")
+  token = data.is_a?(Hash) ? data["vitals_ingest_token"] : nil
+  Wokku::Output.status(token ? "New token: #{token}  (update the vitals snippet on your site)" : "Token rotated.")
+end
