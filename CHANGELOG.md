@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.0 — 2026-11-01
+
+- `transfers`, `transfers:accept ID`, `transfers:decline ID`, `transfers:cancel ID` — finish an app transfer without the dashboard.
+- `teams:members:role TEAM_ID MEMBERSHIP_ID viewer|member|admin` — change a member's role.
+- `notifications:test ID` — send a sample message to a notification channel.
+- `databases:resize DB --cpu --memory --disk` and `databases:retry DB`.
+- `billing:invoices` — list invoices; unpaid ones print a link to pay in the dashboard.
+
 ## 0.8.0 — 2026-10-23
 
 - `incidents [--all] [--app APP]`, `incidents:info ID` — what is down now and recent outages.
