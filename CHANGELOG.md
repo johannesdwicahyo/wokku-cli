@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.11.0 — 2026-11-22
+
+- `bucket APP [--reveal]` — show an app's object storage bucket (endpoint, usage, keys; the secret only with `--reveal`).
+- `bucket:create APP` — enable object storage; the app gets `S3_*` env vars and restarts when ready.
+- `bucket:resize APP GB`, `bucket:rotate APP`, `bucket:destroy APP` — change the quota, rotate keys, delete the bucket and its files.
+
 ## 0.10.0 — 2026-11-01
 
 - `previews:settings APP [--on|--off] [--database empty|snapshot|shared]` — set up PR previews.

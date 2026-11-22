@@ -35,6 +35,7 @@ Run `wokku --help` for the full list. ~30 first-class commands today, grouped:
 - **Config:** `config`, `config:set`, `config:get`, `config:unset`, `config:export`
 - **Domains + SSL:** `domains`, `domains:add/remove/clear`, `certs:enable`, `certs:disable`
 - **Databases:** `databases`, `databases:create/destroy/link/unlink/info`, `backups`, `backups:create/restore`
+- **Object storage:** `bucket`, `bucket:create/resize/rotate/destroy`
 - **SSH keys:** `ssh-keys`, `ssh-keys:add/remove`
 - **Servers:** `servers`, `servers:info`, `servers:default` (multi-Dokku-host installs)
 - **Teams:** `teams`, `teams:members`, `teams:invite`, `teams:remove`
